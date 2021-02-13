@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -16,6 +16,7 @@
 		2950BFF925D8272800553F84 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2950BFF725D8272800553F84 /* LaunchScreen.storyboard */; };
 		2950C00425D8272800553F84 /* TwitterDropTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2950C00325D8272800553F84 /* TwitterDropTests.swift */; };
 		2950C00F25D8272800553F84 /* TwitterDropUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2950C00E25D8272800553F84 /* TwitterDropUITests.swift */; };
+		298D5A1B25D82B1600E1AEF3 /* MyTwitterDrop in Frameworks */ = {isa = PBXBuildFile; productRef = 298D5A1A25D82B1600E1AEF3 /* MyTwitterDrop */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -58,6 +59,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				298D5A1B25D82B1600E1AEF3 /* MyTwitterDrop in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -85,6 +87,7 @@
 				2950C00225D8272800553F84 /* TwitterDropTests */,
 				2950C00D25D8272800553F84 /* TwitterDropUITests */,
 				2950BFE725D8272700553F84 /* Products */,
+				298D5A1925D82B1600E1AEF3 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -139,6 +142,13 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
+		298D5A1925D82B1600E1AEF3 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -155,6 +165,9 @@
 			dependencies = (
 			);
 			name = TwitterDrop;
+			packageProductDependencies = (
+				298D5A1A25D82B1600E1AEF3 /* MyTwitterDrop */,
+			);
 			productName = TwitterDrop;
 			productReference = 2950BFE625D8272700553F84 /* TwitterDrop.app */;
 			productType = "com.apple.product-type.application";
@@ -605,6 +618,13 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		298D5A1A25D82B1600E1AEF3 /* MyTwitterDrop */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MyTwitterDrop;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCVersionGroup section */
 		2950BFF225D8272700553F84 /* TwitterDrop.xcdatamodeld */ = {
