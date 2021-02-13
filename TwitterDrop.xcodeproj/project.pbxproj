@@ -105,7 +105,7 @@
 				2950BFEB25D8272700553F84 /* SceneDelegate.swift */,
 				2950BFED25D8272700553F84 /* ViewController.swift */,
 				2950BFEF25D8272700553F84 /* Main.storyboard */,
-				2950BFF525D8272800553F84 /* Assets.xcassets */,
+				298D5A1525D8297700E1AEF3 /* Resources */,
 				2950BFF725D8272800553F84 /* LaunchScreen.storyboard */,
 				2950BFFA25D8272800553F84 /* Info.plist */,
 				2950BFF225D8272700553F84 /* TwitterDrop.xcdatamodeld */,
@@ -129,6 +129,14 @@
 				2950C01025D8272800553F84 /* Info.plist */,
 			);
 			path = TwitterDropUITests;
+			sourceTree = "<group>";
+		};
+		298D5A1525D8297700E1AEF3 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				2950BFF525D8272800553F84 /* Assets.xcassets */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -450,7 +458,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = maikdrop.TwitterDrop;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -469,7 +477,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = maikdrop.TwitterDrop;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
