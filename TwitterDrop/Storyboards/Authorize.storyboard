@@ -11,7 +11,7 @@
         <!--Authorize View Controller-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="AuthorizeViewController" customModule="TwitterDrop" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="AuthorizeVC" id="BYZ-38-t0r" customClass="AuthorizeViewController" customModule="TwitterDrop" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -34,11 +34,9 @@
                     </view>
                     <connections>
                         <outlet property="authorizeBtn" destination="ESx-Hb-nJE" id="41P-qT-SUx"/>
-                        <segue destination="Wno-6c-JAW" kind="unwind" identifier="loginBySegue" unwindAction="loginBySegue:" id="yc3-Vn-ZcD"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
-                <exit id="Wno-6c-JAW" userLabel="Exit" sceneMemberID="exit"/>
             </objects>
             <point key="canvasLocation" x="139" y="128"/>
         </scene>

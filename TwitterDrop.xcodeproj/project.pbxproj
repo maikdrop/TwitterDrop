@@ -25,6 +25,8 @@
 		298D5A4F25D82F0100E1AEF3 /* AppStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 298D5A4D25D82F0100E1AEF3 /* AppStrings.swift */; };
 		298D5A5025D82F0100E1AEF3 /* LoadingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 298D5A4E25D82F0100E1AEF3 /* LoadingViewController.swift */; };
 		298D5A5B25D8316500E1AEF3 /* AuthorizeNaviPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 298D5A5A25D8316500E1AEF3 /* AuthorizeNaviPresenter.swift */; };
+		298D5A7825D8342700E1AEF3 /* DeveloperCredentials.swift in Sources */ = {isa = PBXBuildFile; fileRef = 298D5A7725D8342700E1AEF3 /* DeveloperCredentials.swift */; };
+		298D5A8125D84C4D00E1AEF3 /* UIViewController+Alert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 298D5A8025D84C4C00E1AEF3 /* UIViewController+Alert.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -68,6 +70,8 @@
 		298D5A4D25D82F0100E1AEF3 /* AppStrings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppStrings.swift; sourceTree = "<group>"; };
 		298D5A4E25D82F0100E1AEF3 /* LoadingViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoadingViewController.swift; sourceTree = "<group>"; };
 		298D5A5A25D8316500E1AEF3 /* AuthorizeNaviPresenter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AuthorizeNaviPresenter.swift; sourceTree = "<group>"; };
+		298D5A7725D8342700E1AEF3 /* DeveloperCredentials.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeveloperCredentials.swift; sourceTree = "<group>"; };
+		298D5A8025D84C4C00E1AEF3 /* UIViewController+Alert.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIViewController+Alert.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -198,6 +202,7 @@
 		298D5A4425D82EBA00E1AEF3 /* Extension */ = {
 			isa = PBXGroup;
 			children = (
+				298D5A8025D84C4C00E1AEF3 /* UIViewController+Alert.swift */,
 				298D5A4525D82ED300E1AEF3 /* UIViewController+ChildViewController.swift */,
 				298D5A4625D82ED300E1AEF3 /* UIViewController+ContentViewController.swift */,
 			);
@@ -216,6 +221,7 @@
 		298D5A5425D82F7900E1AEF3 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				298D5A7725D8342700E1AEF3 /* DeveloperCredentials.swift */,
 				298D5A5525D8300D00E1AEF3 /* Core Data Model */,
 			);
 			path = Models;
@@ -372,7 +378,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				298D5A4F25D82F0100E1AEF3 /* AppStrings.swift in Sources */,
+				298D5A7825D8342700E1AEF3 /* DeveloperCredentials.swift in Sources */,
 				2950BFF425D8272700553F84 /* TwitterDrop.xcdatamodeld in Sources */,
+				298D5A8125D84C4D00E1AEF3 /* UIViewController+Alert.swift in Sources */,
 				298D5A4825D82ED300E1AEF3 /* UIViewController+ContentViewController.swift in Sources */,
 				298D5A4025D82E5100E1AEF3 /* WebViewController.swift in Sources */,
 				298D5A5B25D8316500E1AEF3 /* AuthorizeNaviPresenter.swift in Sources */,

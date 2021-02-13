@@ -22,6 +22,6 @@ enum AppStrings {
     
     enum Authorize {
         static let storyboardName = "Authorize"
-        static let identifier = "AuthorizeIdentifier"
+        static let identifier = "AuthorizeVC"
     }
 }

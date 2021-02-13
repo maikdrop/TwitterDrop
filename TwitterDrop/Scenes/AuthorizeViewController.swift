@@ -22,10 +22,12 @@ class AuthorizeViewController: OAuthViewController {
     private lazy var internalWebViewController = createWebViewController()
     
     private var oauthswift: OAuth1Swift?
+    private let authorize = Authorize(consumerKey: DeveloperCredentials.consumerKey, consumerSecret: DeveloperCredentials.consumerSecret)
 
     @IBOutlet weak var authorizeBtn: UIButton!
     
     @IBAction func authorizeActBtn(_ sender: UIButton) {
+        authorizeBtn.isHidden = true
         add(loadingVC)
         authorizeApplication()
     }
@@ -44,12 +46,13 @@ class AuthorizeViewController: OAuthViewController {
 private extension AuthorizeViewController {
     
     private func authorizeApplication() {
+        oauthswift = authorize.newOauthObject()
         oauthswift?.authorizeURLHandler = internalWebViewController
         oauthswift?.authorize(
             withCallbackURL: URL(string: "mytwitter://oauth-callback/twitter")!) { result in
             switch result {
             case .success:
-                self.performSegue(withIdentifier: "loginBuySegue", sender: self)
+                self.successfulAuthorization()
             case .failure(let error):
                 self.authorizeBtn.isHidden = false
                 print(error.description)
@@ -65,6 +68,16 @@ private extension AuthorizeViewController {
         controller.viewDidLoad()
         return controller
     }
+    
+    private func successfulAuthorization() {
+        Authorize.saveCredentials(oauthObject: self.oauthswift!, completion: { error in
+            guard error == nil else {
+                print(error!)
+                return
+            }
+            self.presentingViewController?.dismiss(animated: false, completion: nil)
+        })
+    }
 }
 
 extension AuthorizeViewController: OAuthWebViewControllerDelegate {
@@ -77,7 +90,6 @@ extension AuthorizeViewController: OAuthWebViewControllerDelegate {
     }
     
     func oauthWebViewControllerWillAppear() {
-        authorizeBtn.isHidden = true
     }
     
     func oauthWebViewControllerDidAppear() {
