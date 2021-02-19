@@ -49,7 +49,7 @@ private extension AuthorizeViewController {
         oauthswift = authorize.newOauthObject()
         oauthswift?.authorizeURLHandler = internalWebViewController
         oauthswift?.authorize(
-            withCallbackURL: URL(string: "mytwitter://oauth-callback/twitter")!) { result in
+            withCallbackURL: URL(string: AppStrings.Twitter.callBackURL)!) { result in
             switch result {
             case .success:
                 self.successfulAuthorization()
@@ -63,7 +63,7 @@ private extension AuthorizeViewController {
     private func createWebViewController() -> WebViewController {
         let controller = WebViewController()
         controller.modalTransitionStyle = .flipHorizontal
-        controller.view = UIView(frame: UIScreen.main.bounds) // needed if no nib or not loaded from storyboard
+        controller.view = UIView(frame: UIScreen.main.bounds)
         controller.delegate = self
         controller.viewDidLoad()
         return controller
@@ -82,21 +82,11 @@ private extension AuthorizeViewController {
 
 extension AuthorizeViewController: OAuthWebViewControllerDelegate {
     
-    func oauthWebViewControllerDidPresent() {
-       
-    }
-    func oauthWebViewControllerDidDismiss() {
-        
-    }
-    
-    func oauthWebViewControllerWillAppear() {
-    }
-    
-    func oauthWebViewControllerDidAppear() {
-       
-    }
-    func oauthWebViewControllerWillDisappear() {
-    }
+    func oauthWebViewControllerDidPresent() {}
+    func oauthWebViewControllerDidDismiss() {}
+    func oauthWebViewControllerWillAppear() {}
+    func oauthWebViewControllerDidAppear() {}
+    func oauthWebViewControllerWillDisappear() {}
     func oauthWebViewControllerDidDisappear() {
         // Ensure all listeners are removed if presented web view close
         self.oauthswift?.cancel()

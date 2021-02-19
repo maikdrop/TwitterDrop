@@ -19,14 +19,14 @@ struct AuthorizeNaviPresenter {
      
      - Parameter viewController: The presenting view controller.
      */
-    func present(in viewController: UIViewController) {
+    func present(in viewController: UIViewController?) {
 
         let storyboard = UIStoryboard(name: Authorize.storyboardName, bundle: nil)
         
         if let authorizeVC = storyboard.instantiateViewController(withIdentifier: Authorize.identifier) as? AuthorizeViewController {
             authorizeVC.modalTransitionStyle = .coverVertical
             authorizeVC.modalPresentationStyle = .fullScreen
-            viewController.present(authorizeVC, animated: true)
+            viewController?.present(authorizeVC, animated: true)
         }
     }
 }

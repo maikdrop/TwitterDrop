@@ -15,6 +15,11 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <view key="tableFooterView" contentMode="scaleToFill" id="Hmj-Rh-69K">
+                            <rect key="frame" x="0.0" y="99.5" width="414" height="44"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        </view>
                         <prototypes>
                             <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="tweetCell" id="9lT-oo-hnG">
                                 <rect key="frame" x="0.0" y="28" width="414" height="43.5"/>
@@ -30,19 +35,17 @@
                             <outlet property="delegate" destination="b99-eU-RHF" id="rVY-Xu-r71"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" id="Sik-RK-7Iz">
-                        <barButtonItem key="rightBarButtonItem" title="Item" image="power" catalog="system" id="pEK-ug-LhV">
-                            <connections>
-                                <action selector="logoutActBtn:" destination="b99-eU-RHF" id="ZPX-Hj-W3Q"/>
-                            </connections>
-                        </barButtonItem>
-                    </navigationItem>
+                    <navigationItem key="navigationItem" id="Sik-RK-7Iz"/>
                     <refreshControl key="refreshControl" opaque="NO" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" enabled="NO" contentHorizontalAlignment="center" contentVerticalAlignment="center" id="r1i-ok-YgL">
+                        <rect key="frame" x="0.0" y="0.0" width="1000" height="1000"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <connections>
                             <action selector="refreshAct:" destination="b99-eU-RHF" eventType="valueChanged" id="zL3-St-nsf"/>
                         </connections>
                     </refreshControl>
+                    <connections>
+                        <outlet property="footerView" destination="Hmj-Rh-69K" id="Tvg-pk-m7b"/>
+                    </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="z33-Nc-yZz" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
@@ -68,7 +71,6 @@
         </scene>
     </scenes>
     <resources>
-        <image name="power" catalog="system" width="128" height="124"/>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>

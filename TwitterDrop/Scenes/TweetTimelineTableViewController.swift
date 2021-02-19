@@ -14,8 +14,19 @@ class TweetTimelineTableViewController: UITableViewController {
     private var oauthswift: OAuth1Swift?
     private let loadingVC = LoadingViewController()
     private let authorize = Authorize(consumerKey: DeveloperCredentials.consumerKey, consumerSecret: DeveloperCredentials.consumerSecret)
+
+    private var user: User? {
+        didSet {
+//            tableView.refreshControl?.endRefreshing()
+//            tableView.reloadData()
+            fetchImage()
+        }
+
+    }
     
-    @IBAction func logoutActBtn(_ sender: UIBarButtonItem) {
+    @IBOutlet weak var footerView: UIView!
+    
+    @objc private func logoutActBtn() {
         logoutAlert(title: "Attention", message: "Are you sure you want to logout?", actionHandler: {
             self.removeDataFromKeychain()
         })
@@ -23,12 +34,10 @@ class TweetTimelineTableViewController: UITableViewController {
     
     @IBAction func refreshAct(_ sender: UIRefreshControl) {
     
-    
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigationItem.title = AppStrings.Twitter.title
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -63,6 +72,34 @@ class TweetTimelineTableViewController: UITableViewController {
     }
     */
     
+    private func fetchImage() {
+        
+        guard let url = user?.getProfileImage(sizeCategory: .normal) else {
+            return
+        }
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let imageData = try? Data(contentsOf: url) else {
+                return
+            }
+            DispatchQueue.main.async { [self] in
+                if let profileImage = UIImage(data: imageData) {
+                    self?.navigationItem.rightBarButtonItem = self?.createLogoutBarBtn(with: profileImage)
+                    self?.loadingVC.remove()
+                }
+            }
+        }
+    }
+    
+    private func createLogoutBarBtn(with image: UIImage) -> UIBarButtonItem? {
+        let button = UIButton()
+        button.setImage(image, for: .normal)
+        button.addTarget(self, action: #selector(logoutActBtn), for: .touchUpInside)
+        let barButton = UIBarButtonItem(customView: button)
+        barButton.customView?.layer.cornerRadius = image.size.height / 2
+        barButton.customView?.clipsToBounds = true
+        return barButton
+    }
+    
     private func removeDataFromKeychain() {
         Authorize.removeCredentials(completion: { error in
             guard error == nil else {
@@ -80,19 +117,22 @@ class TweetTimelineTableViewController: UITableViewController {
     private func checkUserCredentials() {
         add(loadingVC)
         if let oauth = authorize.loadUserCredentials() {
-            Authorize.checkCredentials(for: oauth) { result in
-                if case .failure = result {
+            Authorize.checkCredentials(for: oauth) {  [weak self] result in
+                switch result {
+                case .success(let user):
+                    DispatchQueue.main.async {
+                        self?.user = user
+                    }
+                case .failure(let error):
+                    print(error)
+                    self?.loadingVC.remove()
                     AuthorizeNaviPresenter().present(in: self)
-                } else {
-                    print("Credentials valid")
-                    self.oauthswift = oauth
                 }
             }
-        } else {
-            AuthorizeNaviPresenter().present(in: self)
         }
-        self.loadingVC.remove()
     }
+    
+    
 
     /*
     // MARK: - Navigation

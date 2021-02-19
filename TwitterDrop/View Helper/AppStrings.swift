@@ -18,10 +18,15 @@ enum AppStrings {
         static let title = "Tweet Timeline"
         static let storyboardName = "Twitter"
         static let tweetTimelineIdentifier = "TweetTimelineTVC"
+        static let callBackURL = "mytwitter://oauth-callback/twitter"
     }
     
     enum Authorize {
         static let storyboardName = "Authorize"
         static let identifier = "AuthorizeVC"
+    }
+    
+    enum Alert {
+        static let logoutTitle = " "
     }
 }
