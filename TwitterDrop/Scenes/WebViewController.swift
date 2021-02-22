@@ -16,9 +16,21 @@ import WebKit
 
 class WebViewController: OAuthWebViewController {
     
+    // MARK: - Properties
     private var targetURL: URL?
     private let webView: WKWebView = WKWebView()
     private let loadingVC = LoadingViewController()
+    
+    // MARK: - Overriden methods from base class
+    override func handle(_ url: URL) {
+        targetURL = url
+        super.handle(url)
+        loadAddressURL()
+    }
+}
+
+// MARK: - Default methods
+extension WebViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -28,28 +40,12 @@ class WebViewController: OAuthWebViewController {
         self.webView.translatesAutoresizingMaskIntoConstraints = false
         self.view.addSubview(self.webView)
     }
-    
-    override func handle(_ url: URL) {
-        targetURL = url
-        super.handle(url)
-        loadAddressURL()
-    }
-    
-    func loadAddressURL() {
-        guard let url = targetURL else {
-            return
-        }
-        let req = URLRequest(url: url)
-        DispatchQueue.main.async {
-            self.add(self.loadingVC)
-            self.webView.load(req)
-        }
-    }
 }
 
+// MARK: - Webkit navigation delegate methods
 extension WebViewController: WKNavigationDelegate {
     
-    // Delegate Method to remove Loading Wheel
+    // Delegate method to remove loading wheel
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         self.loadingVC.remove()
     }
@@ -64,7 +60,6 @@ extension WebViewController: WKNavigationDelegate {
                 return
             }
         }
-        
         decisionHandler(.allow)
     }
     
@@ -75,10 +70,22 @@ extension WebViewController: WKNavigationDelegate {
     }
 }
 
+// MARK: - Private action methods
 private extension WebViewController {
     
     private func dismissAuthorization(decisionHandler: (WKNavigationActionPolicy) -> Void) {
         decisionHandler(.cancel)
         self.dismissWebViewController()
+    }
+    
+    private func loadAddressURL() {
+        guard let url = targetURL else {
+            return
+        }
+        let req = URLRequest(url: url)
+        DispatchQueue.main.async {
+            self.add(self.loadingVC)
+            self.webView.load(req)
+        }
     }
 }

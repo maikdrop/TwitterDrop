@@ -19,6 +19,11 @@ enum AppStrings {
         static let storyboardName = "Twitter"
         static let tweetTimelineIdentifier = "TweetTimelineTVC"
         static let callBackURL = "mytwitter://oauth-callback/twitter"
+        static let noConnection = "No Internet Connection"
+        static let alertTitle = "Attention"
+        static let logoutAlertMsg = "Are you sure you want to logout?"
+        static let logoutErrorAlertMsg = "Error occured while logout."
+        
     }
     
     enum Authorize {

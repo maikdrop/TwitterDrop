@@ -36,10 +36,10 @@ extension UIViewController {
      - Parameter title: The title of the alert.
      - Parameter message: The message of the alert.
      */
-    func infoAlert(title: String?, message: String?, actionHandler:  @escaping () -> Void) {
+    func infoAlert(title: String?, message: String?, retryActionHandler:  @escaping () -> Void) {
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let okAction = UIAlertAction(title: "Ok", style: .default)
-        let retryAction = UIAlertAction(title: "Retry", style: .default, handler: { _ in actionHandler() })
+        let retryAction = UIAlertAction(title: "Retry", style: .default, handler: { _ in retryActionHandler() })
         alertController.addAction(okAction)
         alertController.addAction(retryAction)
         present(alertController, animated: true, completion: nil)

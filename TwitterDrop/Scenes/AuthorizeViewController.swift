@@ -17,13 +17,14 @@ import UIKit
 
 class AuthorizeViewController: OAuthViewController {
     
+    // MARK: - Properties
+    var authorizeHandler : ((String,String) -> Void)?
     private let loadingVC = LoadingViewController()
-    
-    private lazy var internalWebViewController = createWebViewController()
-    
-    private var oauthswift: OAuth1Swift?
     private let authorize = Authorize(consumerKey: DeveloperCredentials.consumerKey, consumerSecret: DeveloperCredentials.consumerSecret)
+    private var oauthswift: OAuth1Swift?
+    private lazy var internalWebViewController = createWebViewController()
 
+    // MARK: - IBActions and Outlets
     @IBOutlet weak var authorizeBtn: UIButton!
     
     @IBAction func authorizeActBtn(_ sender: UIButton) {
@@ -31,10 +32,10 @@ class AuthorizeViewController: OAuthViewController {
         add(loadingVC)
         authorizeApplication()
     }
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-    }
+}
+
+// MARK: - Default methods
+extension AuthorizeViewController {
     
     override func present(_ viewControllerToPresent: UIViewController, animated flag: Bool, completion: (() -> Void)? = nil) {
         viewControllerToPresent.modalPresentationStyle = .fullScreen
@@ -43,6 +44,7 @@ class AuthorizeViewController: OAuthViewController {
     }
 }
 
+// MARK: - Private network request methods
 private extension AuthorizeViewController {
     
     private func authorizeApplication() {
@@ -51,35 +53,17 @@ private extension AuthorizeViewController {
         oauthswift?.authorize(
             withCallbackURL: URL(string: AppStrings.Twitter.callBackURL)!) { result in
             switch result {
-            case .success:
-                self.successfulAuthorization()
+            case .success(let (credential, _, _)):
+                self.authorizeHandler?(credential.oauthToken, credential.oauthTokenSecret)
             case .failure(let error):
                 self.authorizeBtn.isHidden = false
                 print(error.description)
             }
         }
     }
-    
-    private func createWebViewController() -> WebViewController {
-        let controller = WebViewController()
-        controller.modalTransitionStyle = .flipHorizontal
-        controller.view = UIView(frame: UIScreen.main.bounds)
-        controller.delegate = self
-        controller.viewDidLoad()
-        return controller
-    }
-    
-    private func successfulAuthorization() {
-        Authorize.saveCredentials(oauthObject: self.oauthswift!, completion: { error in
-            guard error == nil else {
-                print(error!)
-                return
-            }
-            self.presentingViewController?.dismiss(animated: false, completion: nil)
-        })
-    }
 }
 
+// MARK: - Oauth web view controller delegate methods
 extension AuthorizeViewController: OAuthWebViewControllerDelegate {
     
     func oauthWebViewControllerDidPresent() {}
@@ -90,5 +74,18 @@ extension AuthorizeViewController: OAuthWebViewControllerDelegate {
     func oauthWebViewControllerDidDisappear() {
         // Ensure all listeners are removed if presented web view close
         self.oauthswift?.cancel()
+    }
+}
+
+// MARK: - Private utility methods
+private extension AuthorizeViewController {
+    
+    private func createWebViewController() -> WebViewController {
+        let controller = WebViewController()
+        controller.modalTransitionStyle = .flipHorizontal
+        controller.view = UIView(frame: UIScreen.main.bounds)
+        controller.delegate = self
+        controller.viewDidLoad()
+        return controller
     }
 }
