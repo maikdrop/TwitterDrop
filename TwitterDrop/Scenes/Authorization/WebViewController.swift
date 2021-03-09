@@ -27,6 +27,8 @@ class WebViewController: OAuthWebViewController {
         super.handle(url)
         loadAddressURL()
     }
+    
+    deinit { print("DEINIT - WebViewController") }
 }
 
 // MARK: - Default methods

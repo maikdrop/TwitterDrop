@@ -1,15 +1,8 @@
-//
-//  Cache.swift
-//  TwitterDrop
-//
-//  Created by Maik on 16.02.21.
-//
 
-//Source: https://www.swiftbysundell.com/articles/caching-in-swift/
+// Source: https://www.swiftbysundell.com/articles/caching-in-swift/
 import Foundation
 
 final class Cache<Key: Hashable, Value> {
-    
     private let wrapped = NSCache<WrappedKey, Entry>()
     private let dateProvider: () -> Date
     private let entryLifetime: TimeInterval
@@ -39,7 +32,6 @@ final class Cache<Key: Hashable, Value> {
         
         return entry.value
     }
-    
     func removeValue(forKey key: Key) {
         wrapped.removeObject(forKey: WrappedKey(key))
     }
@@ -48,6 +40,7 @@ final class Cache<Key: Hashable, Value> {
 private extension Cache {
     
     final class WrappedKey: NSObject {
+        
         let key: Key
         
         init(_ key: Key) { self.key = key }
@@ -78,6 +71,7 @@ private extension Cache {
 }
 
 extension Cache {
+    
     subscript(key: Key) -> Value? {
         get { return value(forKey: key) }
         set {
@@ -87,7 +81,6 @@ extension Cache {
                 removeValue(forKey: key)
                 return
             }
-            
             insert(value, forKey: key)
         }
     }

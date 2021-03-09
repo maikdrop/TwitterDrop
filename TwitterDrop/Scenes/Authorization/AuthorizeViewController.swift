@@ -32,6 +32,8 @@ class AuthorizeViewController: OAuthViewController {
         add(loadingVC)
         authorizeApplication()
     }
+    
+    deinit { print("DEINIT - AuthorizeViewController") }
 }
 
 // MARK: - Default methods
@@ -51,12 +53,12 @@ private extension AuthorizeViewController {
         oauthswift = authorize.newOauthObject()
         oauthswift?.authorizeURLHandler = internalWebViewController
         oauthswift?.authorize(
-            withCallbackURL: URL(string: AppStrings.Twitter.callBackURL)!) { result in
+            withCallbackURL: URL(string: AppStrings.Twitter.callBackURL)!) { [weak self] result in
             switch result {
             case .success(let (credential, _, _)):
-                self.authorizeHandler?(credential.oauthToken, credential.oauthTokenSecret)
+                self?.authorizeHandler?(credential.oauthToken, credential.oauthTokenSecret)
             case .failure(let error):
-                self.authorizeBtn.isHidden = false
+                self?.authorizeBtn.isHidden = false
                 print(error.description)
             }
         }

@@ -10,21 +10,25 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import UIKit
+import Foundation
 
-class LoadingViewController: UIViewController {
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        let spinner = UIActivityIndicatorView(style: .large)
-        spinner.color = .darkGray
-        spinner.translatesAutoresizingMaskIntoConstraints = false
-        spinner.startAnimating()
-        view.addSubview(spinner)
-
-        NSLayoutConstraint.activate([
-            spinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            spinner.centerYAnchor.constraint(equalTo: view.centerYAnchor)
-        ])
+enum HTTPStatusCode: Int {
+    
+    case info = 100
+    case success = 200
+    case redirect = 300
+    case client = 400
+    case server = 500
+    case unknown = 999
+    
+    init(code: Int) {
+        switch code {
+        case 100...199: self = .info
+        case 200...299: self = .success
+        case 300...399: self = .redirect
+        case 400...499: self = .client
+        case 500...599: self = .server
+        default: self = .unknown
+        }
     }
 }

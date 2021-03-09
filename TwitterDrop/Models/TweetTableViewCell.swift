@@ -10,28 +10,33 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import Foundation
+import UIKit
+import CoreData
+import MyTwitterDrop
 
-enum AppStrings {
+class TweetTableViewCell: UITableViewCell {
+
+    @IBOutlet weak var tweetProfileImageView: UIImageView!
+    @IBOutlet weak var tweetCreatedLbl: UILabel!
+    @IBOutlet weak var tweetUserLbl: UILabel!
+    @IBOutlet weak var tweetTextLbl: UILabel!
     
-    enum Twitter {
-        static let title = "Tweet Timeline"
-        static let storyboardName = "Twitter"
-        static let tweetTimelineIdentifier = "TweetTimelineTVC"
-        static let callBackURL = "mytwitter://oauth-callback/twitter"
-        static let noConnection = "No Internet Connection"
-        static let alertTitle = "Attention"
-        static let logoutAlertMsg = "Are you sure you want to logout?"
-        static let logoutErrorAlertMsg = "Error occured while logout."
+    private var container: NSPersistentContainer? = AppDelegate.persistentContainer
+    
+    var tweet: MyTwitterDrop.Tweet? { didSet { updateUI() } }
+    
+    private func updateUI() {
+        tweetUserLbl?.text = tweet?.user.description
+        tweetTextLbl?.text = tweet?.text
         
-    }
-    
-    enum Authorize {
-        static let storyboardName = "Authorize"
-        static let identifier = "AuthorizeVC"
-    }
-    
-    enum Alert {
-        static let logoutTitle = " "
+        if let userId = tweet?.user.id {
+            tweetProfileImageView?.image = TweetTimelineTableViewController.cache.value(forKey: userId)
+        }
+        
+        if let created = tweet?.created {
+            tweetCreatedLbl?.text = getTimeAndDateFormatted(date: created, dateFormat: "dd.MM.yyyy HH:mm:ss")
+        } else {
+            tweetCreatedLbl?.text = nil
+        }
     }
 }

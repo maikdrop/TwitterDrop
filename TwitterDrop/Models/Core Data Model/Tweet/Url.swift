@@ -12,9 +12,24 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 import UIKit
 import CoreData
+import MyTwitterDrop
 
-class Tweet: NSManagedObject {
+public class Url: NSManagedObject {
 
-    
-    
+    static func createUrl(matching twitterInfo: MyTwitterDrop.Tweet, in context: NSManagedObjectContext) -> [Url] {
+        
+        var urls = [Url]()
+       
+        if let tweetUrls = twitterInfo.urls {
+            for url in tweetUrls {
+                let newUrl = Url(context: context)
+                newUrl.displayUrl = url.displayUrl
+                newUrl.expandedUrl = url.expandedUrl
+                newUrl.url = url.url
+                newUrl.indices = url.indices
+                urls.append(newUrl)
+            }
+        }
+        return urls
+    }
 }

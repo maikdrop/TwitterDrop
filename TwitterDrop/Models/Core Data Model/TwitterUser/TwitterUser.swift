@@ -14,7 +14,7 @@ import UIKit
 import CoreData
 import MyTwitterDrop
 
-class TwitterUser: NSManagedObject {
+public class TwitterUser: NSManagedObject {
     
     static func findOrCreateTwitterUser(matching twitterInfo: MyTwitterDrop.User, in context: NSManagedObjectContext) throws -> TwitterUser {
         
@@ -35,10 +35,12 @@ class TwitterUser: NSManagedObject {
         twitterUser.handle = twitterInfo.screenName
         twitterUser.name = twitterInfo.name
         twitterUser.id = twitterInfo.id
+        twitterUser.verified = twitterInfo.verified
+        twitterUser.profileImageUrl = twitterInfo.profileImageURL.string
         return twitterUser
     }
     
-    static func findTwitterUser(matching userID: String, in context: NSManagedObjectContext) throws -> TwitterUser? {
+    static func findTwitterUser(userID: String, in context: NSManagedObjectContext) throws -> TwitterUser? {
         
         let request: NSFetchRequest<TwitterUser> = TwitterUser.fetchRequest()
         request.predicate = NSPredicate(format: "id = %@", userID)
@@ -55,7 +57,7 @@ class TwitterUser: NSManagedObject {
         return nil
     }
     
-    static func updateTwitterUser(matching userID: String, with image: UIImage, context: NSManagedObjectContext) throws -> TwitterUser? {
+    static func updateTwitterUser(userID: String, with image: UIImage, context: NSManagedObjectContext) throws -> TwitterUser? {
         
         let request: NSFetchRequest<TwitterUser> = TwitterUser.fetchRequest()
         request.predicate = NSPredicate(format: "id = %@", userID)

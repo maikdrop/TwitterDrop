@@ -1,21 +1,48 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="17709" systemVersion="20D74" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="Hashtag" representedClassName=".Hashtag" syncable="YES" codeGenerationType="category">
+        <attribute name="indices" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer" customClassName=".[Int]"/>
+        <attribute name="text" optional="YES" attributeType="String"/>
+        <relationship name="tweet" optional="YES" maxCount="1" deletionRule="Deny" destinationEntity="Tweet" inverseName="hashtags" inverseEntity="Tweet"/>
+    </entity>
     <entity name="Tweet" representedClassName=".Tweet" syncable="YES" codeGenerationType="category">
         <attribute name="created" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="text" optional="YES" attributeType="String"/>
         <attribute name="unique" optional="YES" attributeType="String"/>
+        <relationship name="hashtags" optional="YES" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="Hashtag" inverseName="tweet" inverseEntity="Hashtag"/>
         <relationship name="tweeter" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="TwitterUser" inverseName="tweets" inverseEntity="TwitterUser"/>
+        <relationship name="urls" optional="YES" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="Url" inverseName="tweet" inverseEntity="Url"/>
+        <relationship name="userMentions" optional="YES" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="UserMention" inverseName="tweet" inverseEntity="UserMention"/>
     </entity>
     <entity name="TwitterUser" representedClassName=".TwitterUser" syncable="YES" codeGenerationType="category">
         <attribute name="handle" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="String"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="profileImage" optional="YES" attributeType="Binary"/>
+        <attribute name="profileImageUrl" optional="YES" attributeType="String"/>
         <attribute name="screenName" optional="YES" attributeType="String"/>
+        <attribute name="verified" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <relationship name="tweets" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Tweet" inverseName="tweeter" inverseEntity="Tweet"/>
     </entity>
+    <entity name="Url" representedClassName=".Url" syncable="YES" codeGenerationType="category">
+        <attribute name="displayUrl" optional="YES" attributeType="String"/>
+        <attribute name="expandedUrl" optional="YES" attributeType="String"/>
+        <attribute name="indices" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer" customClassName=".[Int]"/>
+        <attribute name="url" optional="YES" attributeType="String"/>
+        <relationship name="tweet" optional="YES" maxCount="1" deletionRule="Deny" destinationEntity="Tweet" inverseName="urls" inverseEntity="Tweet"/>
+    </entity>
+    <entity name="UserMention" representedClassName=".UserMention" syncable="YES" codeGenerationType="category">
+        <attribute name="id" optional="YES" attributeType="String"/>
+        <attribute name="indices" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer" customClassName=".[Int]"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="screenName" optional="YES" attributeType="String"/>
+        <relationship name="tweet" optional="YES" maxCount="1" deletionRule="Deny" destinationEntity="Tweet" inverseName="userMentions" inverseEntity="Tweet"/>
+    </entity>
     <elements>
-        <element name="TwitterUser" positionX="-263.8525390625" positionY="-14.8665771484375" width="128" height="133"/>
-        <element name="Tweet" positionX="-61.241943359375" positionY="0.83599853515625" width="128" height="103"/>
+        <element name="Hashtag" positionX="-69.84088134765625" positionY="-144.8684692382812" width="128" height="88"/>
+        <element name="Tweet" positionX="-67.6820068359375" positionY="-10.37509155273438" width="128" height="148"/>
+        <element name="TwitterUser" positionX="-263.8525390625" positionY="-14.8665771484375" width="128" height="163"/>
+        <element name="Url" positionX="-63.832763671875" positionY="207.0124816894531" width="128" height="118"/>
+        <element name="UserMention" positionX="138.0895385742188" positionY="22.7803955078125" width="128" height="118"/>
     </elements>
 </model>
