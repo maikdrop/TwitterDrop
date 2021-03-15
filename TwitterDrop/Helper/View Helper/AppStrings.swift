@@ -33,4 +33,11 @@ enum AppStrings {
     enum Alert {
         static let logoutTitle = " "
     }
+    
+    enum TweetCell {
+        static let identifier = "tweetCell"
+        static let sectionTitleOld = "Old Tweets"
+        static let sectionTitleRecent = "Recent Tweets"
+        
+    }
 }

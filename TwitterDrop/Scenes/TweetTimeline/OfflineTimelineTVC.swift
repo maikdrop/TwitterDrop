@@ -40,6 +40,7 @@ class OfflineTimelineTVC: TweetTimelineTableViewController {
             super.credentialCheckFailed()
         } else {
             setProfileImageFromDB()
+            self.tableView.refreshControl?.endRefreshing()
         }
     }
     
@@ -47,6 +48,7 @@ class OfflineTimelineTVC: TweetTimelineTableViewController {
         updateDatabase(with: newTweets)
         super.insertTweets(newTweets)
     }
+    
     override func fetchProfileImage(for users: Set<MyTwitterDrop.User>, completionHandler: @escaping () -> Void) {
         
         if users.count == 1 && users.first?.id == Authorize.loggedUserID {
@@ -62,9 +64,14 @@ class OfflineTimelineTVC: TweetTimelineTableViewController {
 extension OfflineTimelineTVC {
  
     override func viewDidLoad() {
-        startNetworkMonitor()
-        loadTweetsFromDatabase()
         super.viewDidLoad()
+        startNetworkMonitor()
+        loadTweetsFromDatabase { [weak self] loadedTweets in
+            self?.superInsertTweets(tweets: loadedTweets)
+            DispatchQueue.main.async {
+                self?.superCheckUserCredentials()
+            }
+        }
     }
 }
 
@@ -97,13 +104,24 @@ private extension OfflineTimelineTVC {
         super.fetchProfileImage(for: users, completionHandler: completionHandler)
     }
     
-    private func loadTweetsFromDatabase() {
-        container?.performBackgroundTask { context in
+    private func superCheckUserCredentials() {
+        super.checkUserCredentials()
+    }
+    
+    private func superInsertTweets(tweets: [MyTwitterDrop.Tweet]) {
+        super.insertTweets(tweets)
+    }
+    
+    private func loadTweetsFromDatabase(completion: @escaping ([MyTwitterDrop.Tweet]) -> Void) {
+        container?.performBackgroundTask { [weak self] context in
             if let fetchedTweets = try? Tweet.findTweets(in: context) {
-                let tweetsToDisplay = self.createTweets(from: fetchedTweets)
-                DispatchQueue.main.async {
-                    super.insertTweets(tweetsToDisplay)
+                if let tweetsToDisplay = self?.createTweets(from: fetchedTweets) {
+                    completion(tweetsToDisplay)
+                } else {
+                    completion([])
                 }
+            } else {
+                completion([])
             }
         }
     }
@@ -173,7 +191,7 @@ private extension OfflineTimelineTVC {
                     self.isConnected = false
                 }
             }
-            print(path.isExpensive)
+//            print(path.isExpensive)
         }
         let queue = DispatchQueue(label: queueLbl, qos: .userInteractive)
         monitor.start(queue: queue)
@@ -187,6 +205,7 @@ private extension OfflineTimelineTVC {
     }
 }
 
+// MARK: - Constants
 private extension OfflineTimelineTVC {
     
     private var queueLbl: String { "Monitor" }

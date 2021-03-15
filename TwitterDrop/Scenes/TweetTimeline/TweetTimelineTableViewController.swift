@@ -25,9 +25,10 @@ class TweetTimelineTableViewController: UITableViewController {
     private lazy var authorizeHandler: (String, String) -> Void = { token, tokeSecret in
         self.presentedViewController?.dismiss(animated: false)
         Authorize.saveCredentials(token: token, tokenSecret: tokeSecret)
-        self.checkUserCredentials()
+//        self.checkUserCredentials()
     }
     private var tweets = [Array<MyTwitterDrop.Tweet>]()
+    private lazy var activityIndicator = configureActivityIndicator()
     static let cache = Cache<String, UIImage>()
     
     private(set) var user: User? {
@@ -75,7 +76,9 @@ class TweetTimelineTableViewController: UITableViewController {
                         Self.cache.insert(image, forKey: user.id)
                         self?.setProfileImage(for: user.id, image: image)
                         pendingUrls.remove(url)
-                        if pendingUrls.isEmpty { completionHandler() }
+                        if pendingUrls.isEmpty {
+                            completionHandler()
+                        }
                     }
                 }.resume()
             }
@@ -85,7 +88,7 @@ class TweetTimelineTableViewController: UITableViewController {
     func setProfileImage(for userID: String, image: UIImage) {
         if Authorize.loggedUserID == userID {
             DispatchQueue.main.async {
-                self.navigationItem.rightBarButtonItem = self.createLogoutBarBtn(with: image)
+                self.navigationItem.rightBarButtonItem = self.configureLogoutBarBtn(with: image)
             }
         }
     }
@@ -93,21 +96,53 @@ class TweetTimelineTableViewController: UITableViewController {
     func credentialCheckFailed() {
         AuthorizeNaviPresenter().present(in: self, authorizeHandler: self.authorizeHandler)
     }
- 
+    
     func insertTweets(_ newTweets: [MyTwitterDrop.Tweet]) {
-        add(loadingVC)
-        var usersFromTweets = [MyTwitterDrop.User]()
-        newTweets.forEach { usersFromTweets.append($0.user) }
-        let users = Set(usersFromTweets)
         //checkProfileImage(for: usersToCheck) { [weak self] checkedUsers in
-        self.fetchProfileImage(for: users) {
-            DispatchQueue.main.async {
-                self.tweets.insert(newTweets, at: 0)
-                self.tableView.insertSections([0], with: .fade)
-                self.loadingVC.remove()
+        let tweeter = getTweeterFrom(newTweets)
+        if !tweets.isEmpty && !newTweets.isEmpty {
+            if tweets.last!.last!.created > newTweets.first!.created {
+                insertOldTweets(newTweets, tweeter)
+            } else {
+                insertLatestTweets(newTweets, tweeter)
             }
-            //}
+        } else {
+            insertLatestTweets(newTweets, tweeter)
         }
+    }
+    
+    private func insertLatestTweets(_ latestweets: [MyTwitterDrop.Tweet], _ tweeter: Set<MyTwitterDrop.User>) {
+        if !latestweets.isEmpty {
+            tweets.insert(latestweets, at: 0)
+            fetchProfileImage(for: tweeter) { [weak self] in
+                DispatchQueue.main.async {
+                    self?.tableView.insertSections([0], with: .fade)
+                    if self?.lastTwitterRequest?.min_id == latestweets.first?.identifier {
+                        self?.tableView.refreshControl?.endRefreshing()
+                    }
+                }
+            }
+        }
+    }
+    
+    private func insertOldTweets(_ oldTweets: [MyTwitterDrop.Tweet], _ tweeter: Set<MyTwitterDrop.User>) {
+        if !oldTweets.isEmpty {
+            tweets.append(oldTweets)
+            fetchProfileImage(for: tweeter) { [weak self] in
+                DispatchQueue.main.async {
+                    if let sections = self?.tweets.count, sections >= 1 {
+                        self?.tableView.insertSections([sections-1], with: .fade)
+                        self?.activityIndicator.stopAnimating()
+                    }
+                }
+            }
+        }
+    }
+    
+    private func getTweeterFrom(_ tweets: [MyTwitterDrop.Tweet]) -> Set<MyTwitterDrop.User> {
+        var usersFromTweets = [MyTwitterDrop.User]()
+        tweets.forEach { usersFromTweets.append($0.user) }
+        return Set(usersFromTweets)
     }
 }
 
@@ -119,12 +154,14 @@ extension TweetTimelineTableViewController {
         tableView.estimatedRowHeight = tableView.rowHeight
         tableView.rowHeight = UITableView.automaticDimension
         configureRefreshControl()
-        if user == nil {
-            checkUserCredentials()
-        }
+        tableView.refreshControl?.beginRefreshing()
+        tableView.tableFooterView = configureFooterView()
+       
+        // used when not subclassed
+//        if user == nil { checkUserCredentials() }
     }
 }
- 
+
 // MARK: - Table view data source and delegate methods
 extension TweetTimelineTableViewController {
     
@@ -136,22 +173,29 @@ extension TweetTimelineTableViewController {
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         tweets[section].count
     }
-    
-    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        if section == 0 {
-            return "Recent Tweets"
-        } else {
-            return "Older Tweets"
-        }
-    }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "tweetCell", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: AppStrings.TweetCell.identifier, for: indexPath)
         let tweet: MyTwitterDrop.Tweet = tweets[indexPath.section][indexPath.row]
         if let tweetCell = cell as? TweetTableViewCell {
             tweetCell.tweet = tweet
         }
         return cell
+    }
+    
+    override func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        if tableView.isDragging, tableView.isDecelerating || tableView.isTracking {
+            if tableView.contentOffset.y >= (tableView.contentSize.height - tableView.frame.size.height) {
+                if !activityIndicator.isAnimating {
+                    activityIndicator.startAnimating()
+                    if let request = oldestTweetsRequest(for: .homeTimeline) {
+                        fetchTweets(for: request)
+                    } else {
+                        activityIndicator.stopAnimating()
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -163,17 +207,17 @@ private extension TweetTimelineTableViewController {
     }
     
     @objc private func handleRefreshControl() {
-        if let request = lastTwitterRequest?.newer {
-            self.fetchTweets(for: request)
-        }
-        DispatchQueue.main.async {
-            self.tableView.refreshControl?.endRefreshing()
+        
+        if let request = latestTweetsRequest(for: .homeTimeline) {
+            fetchTweets(for: request)
+        } else {
+            tableView.refreshControl?.endRefreshing()
         }
     }
 }
 
 // MARK: - Private methods for MyTwitterDrop handling
-private extension TweetTimelineTableViewController {
+extension TweetTimelineTableViewController {
     
     // Profile image
     private func fetchProfileImage(for user: MyTwitterDrop.User) {
@@ -183,7 +227,7 @@ private extension TweetTimelineTableViewController {
             if let userID = self?.user?.id, let profileImage = Self.cache.value(forKey: userID) {
                 self?.setProfileImage(for: userID, image: profileImage)
             }
-            if let request = self?.twitterRequestForProfile(for: .homeTimeline) {
+            if let request = self?.latestTweetsRequest(for: .homeTimeline) {
                 DispatchQueue.main.async {
                     self?.fetchTweets(for: request)
                 }
@@ -204,7 +248,6 @@ private extension TweetTimelineTableViewController {
         }
     }
     
-    // https://developer.twitter.com/en/docs/twitter-api/v1/accounts-and-users/user-profile-images-and-banners
     private func checkForNewProfileImage(for user: MyTwitterDrop.User, completion: @escaping (Bool) -> Void) {
         
         if let url = user.getProfileImage(sizeCategory: .original) {
@@ -223,29 +266,40 @@ private extension TweetTimelineTableViewController {
     }
     
     // Tweet
-    private func twitterRequestForProfile(for requestType: MyTwitterDrop.Request.RequestTypes) -> MyTwitterDrop.Request? {
+    private func latestTweetsRequest(for requestType: MyTwitterDrop.Request.RequestTypes) -> MyTwitterDrop.Request? {
         if let authorize = oauthswift {
-            return MyTwitterDrop.Request(oauthswift: authorize, count: 15)
+            return MyTwitterDrop.Request(oauthswift: authorize, latestTweetID: tweets.first?.first?.identifier ?? "", count: 15)
         }
         return nil
     }
     
+    private func oldestTweetsRequest(for requestType: MyTwitterDrop.Request.RequestTypes) -> MyTwitterDrop.Request? {
+        if let authorize = oauthswift, let lastSection = tweets.last, let lastElement = lastSection.last?.identifier, let id = Int(lastElement) {
+           
+            return MyTwitterDrop.Request(oauthswift: authorize, oldestTweetID: String(id - 1), count: 15)
+        }
+        return nil
+    }
+    
+    
     private func fetchTweets(for request: MyTwitterDrop.Request) {
-        add(loadingVC)
         lastTwitterRequest = request
         request.fetchTweets(handler: { [weak self] newTweets in
             DispatchQueue.main.async {
                 if request == self?.lastTwitterRequest {
-                    self?.loadingVC.remove()
-                    self?.insertTweets(newTweets)
+                    if newTweets.isEmpty {
+                        self?.tableView.refreshControl?.endRefreshing()
+                        self?.activityIndicator.stopAnimating()
+                    } else {
+                        self?.insertTweets(newTweets)
+                    }
                 }
             }
         })
     }
     
     // User authorization
-    private func checkUserCredentials() {
-        add(loadingVC)
+    func checkUserCredentials() {
         if let oauth = authorize.loadUserCredentials() {
             self.oauthswift = oauth
             Authorize.checkCredentials(for: oauth) { [weak self] result in
@@ -253,13 +307,12 @@ private extension TweetTimelineTableViewController {
                 case .success(let user):
                     DispatchQueue.main.async {
                         self?.user = user
-                        self?.loadingVC.remove()
                     }
                 case .failure(let error):
                     print(#function)
                     print(error.localizedDescription)
+                    self?.tableView.refreshControl?.endRefreshing()
                     self?.credentialCheckFailed()
-                    self?.loadingVC.remove()
                 }
             }
         } else {
@@ -281,18 +334,31 @@ private extension TweetTimelineTableViewController {
     }
 }
 
-// MARK: - Private utility methods
+// MARK: - Utility methods
 private extension TweetTimelineTableViewController {
     
+    private func configureFooterView() -> UIView {
+        let width = tableView.frame.size.width
+        let customView = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 80))
+        activityIndicator.center = customView.center
+        customView.addSubview(activityIndicator)
+        return customView
+    }
+    
     private func configureRefreshControl () {
-       // Add the refresh control to your UIScrollView object.
        tableView.refreshControl = UIRefreshControl()
        tableView.refreshControl?.addTarget(self, action:
                                           #selector(handleRefreshControl),
                                           for: .valueChanged)
     }
     
-    private func createLogoutBarBtn(with image: UIImage) -> UIBarButtonItem? {
+    private func configureActivityIndicator() -> UIActivityIndicatorView {
+        let activityIndicator = UIActivityIndicatorView(style: .large)
+        activityIndicator.hidesWhenStopped = true
+        return activityIndicator
+    }
+    
+    private func configureLogoutBarBtn(with image: UIImage) -> UIBarButtonItem? {
         if let resizedImage = image.resizeImage(for: CGSize(width: 42, height: 42)) {
             let button = UIButton()
             button.setImage(resizedImage, for: .normal)
