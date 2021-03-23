@@ -35,7 +35,7 @@ enum AppStrings {
     }
     
     enum TweetCell {
-        static let identifier = "tweetCell"
+        static let identifier = "TweetTableViewCell"
         static let sectionTitleOld = "Old Tweets"
         static let sectionTitleRecent = "Recent Tweets"
         

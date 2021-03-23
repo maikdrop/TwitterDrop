@@ -16,7 +16,7 @@ import MyTwitterDrop
 
 public class Tweet: NSManagedObject {
 
-    static func findOrCreateTweet(matching twitterInfo: MyTwitterDrop.Tweet, in context: NSManagedObjectContext) throws -> Tweet {
+    static func findOrCreateTweet(matching twitterInfo: MyTwitterDrop.Tweet, forUserId id: String, in context: NSManagedObjectContext) throws -> Tweet {
         
         let request: NSFetchRequest<Tweet> = Tweet.fetchRequest()
         request.predicate = NSPredicate(format: "unique = %@", twitterInfo.identifier)
@@ -25,6 +25,11 @@ public class Tweet: NSManagedObject {
             let matches = try context.fetch(request)
             if matches.count > 0 {
                 assert(matches.count == 1, "Tweet.findOrCreateTweet -- database inconsistency!")
+                if let tweet = matches.first, let timeline = tweet.timeline, !timeline.contains(id) {
+                    if let timeline = try? Timeline.findOrCreateTimeline(matchingUserId: id, in: context) {
+                        tweet.addToTimeline(timeline)
+                    }
+                }
                 return matches[0]
             }
         } catch {
@@ -38,12 +43,14 @@ public class Tweet: NSManagedObject {
         tweet.hashtags = NSOrderedSet(array: Hashtag.createHashtag(matching: twitterInfo, in: context))
         tweet.urls = NSOrderedSet(array: Url.createUrl(matching: twitterInfo, in: context))
         tweet.userMentions = NSOrderedSet(array: UserMention.createUserMention(matching: twitterInfo, in: context))
-        // TODO Error Handling
+        if let timeline = try? Timeline.findOrCreateTimeline(matchingUserId: id, in: context) {
+            tweet.timeline = NSSet(object: timeline)
+        }
         tweet.tweeter = try? TwitterUser.findOrCreateTwitterUser(matching: twitterInfo.user, in: context)
         return tweet
     }
     
-    static func findTweets(in context: NSManagedObjectContext) throws -> [Tweet]? {
+    static func findTweets(for userId: String, in context: NSManagedObjectContext) throws -> [Tweet]? {
         
         let request: NSFetchRequest<Tweet> = Tweet.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(key: "created", ascending: false)]

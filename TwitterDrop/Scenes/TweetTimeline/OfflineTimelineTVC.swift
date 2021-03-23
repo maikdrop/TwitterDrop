@@ -23,16 +23,44 @@ class OfflineTimelineTVC: TweetTimelineTableViewController {
     private let monitor = NWPathMonitor()
     private var isConnected: Bool = true {
         didSet {
-            self.navigationItem.leftBarButtonItem = isConnected ? nil : self.noWifiBtn
+            DispatchQueue.main.async {
+                self.navigationItem.leftBarButtonItem = self.isConnected ? nil : self.noWifiBtn
+            }
         }
     }
     
     deinit { print("DEINIT - OfflineTimelineTVC") }
     
     // MARK: - Overriden methods from base class
+    override func fetchProfileImage(for users: Set<MyTwitterDrop.User>, completionHandler: @escaping () -> Void) {
+        
+        if users.count == 1 && users.first?.identifier == loggedInUser?.identifier {
+            updateDatabase(with: users.first!)
+        }
+        lookUpDatabase(for: users) { [weak self] usersNotInDB in
+            self?.superFetchProfileImage(for: usersNotInDB, completionHandler: completionHandler)
+        }
+    }
+    
     override func setProfileImage(for userID: String, image: UIImage) {
         super.setProfileImage(for: userID, image: image)
         updateDatabase(for: userID, with: image)
+    }
+    
+    override func fetchTweets(for request: Request) {
+        if let id = self.loggedInUser?.identifier {
+            self.loadTweetsFromDatabase(forUserId: id) { [weak self] tweets in
+                self?.superInsertTweets(tweets: tweets)
+                self?.superFetchTweets(for: request)
+            }
+        }
+    }
+    
+    override func insertTweets(_ newTweets: [MyTwitterDrop.Tweet]) {
+        super.insertTweets(newTweets)
+        if let id = loggedInUser?.identifier {
+            updateDatabase(with: newTweets, forUserId: id)
+        }
     }
     
     override func credentialCheckFailed() {
@@ -40,22 +68,12 @@ class OfflineTimelineTVC: TweetTimelineTableViewController {
             super.credentialCheckFailed()
         } else {
             setProfileImageFromDB()
+            if let id = Authorize.loggedUserID {
+                loadTweetsFromDatabase(forUserId: id) { [weak self] tweets in
+                    self?.superInsertTweets(tweets: tweets)
+                }
+            }
             self.tableView.refreshControl?.endRefreshing()
-        }
-    }
-    
-    override func insertTweets(_ newTweets: [MyTwitterDrop.Tweet]) {
-        updateDatabase(with: newTweets)
-        super.insertTweets(newTweets)
-    }
-    
-    override func fetchProfileImage(for users: Set<MyTwitterDrop.User>, completionHandler: @escaping () -> Void) {
-        
-        if users.count == 1 && users.first?.id == Authorize.loggedUserID {
-            updateDatabase(with: users.first!)
-        }
-        lookUpDatabase(for: users) { [weak self] usersNotInDB in
-            self?.superFetchProfileImage(for: usersNotInDB, completionHandler: completionHandler)
         }
     }
 }
@@ -66,12 +84,6 @@ extension OfflineTimelineTVC {
     override func viewDidLoad() {
         super.viewDidLoad()
         startNetworkMonitor()
-        loadTweetsFromDatabase { [weak self] loadedTweets in
-            self?.superInsertTweets(tweets: loadedTweets)
-            DispatchQueue.main.async {
-                self?.superCheckUserCredentials()
-            }
-        }
     }
 }
 
@@ -84,12 +96,10 @@ private extension OfflineTimelineTVC {
         container?.performBackgroundTask { context in
             for user in users {
                 usersToLookUp.remove(user)
-                if let twitterUser = try? TwitterUser.findTwitterUser(userID: user.id, in: context) {
-                    if let imageData = twitterUser.profileImage, let image = UIImage(data: imageData) {
-                        Self.cache.insert(image, forKey: user.id)
-                    } else {
-                        userImagesNotInDB.insert(user)
-                    }
+                if let twitterUser = try? TwitterUser.findTwitterUser(userID: user.identifier, in: context), let imgData = twitterUser.profileImage, let img = UIImage(data: imgData) {
+                    
+                    Self.cache.insert(img, forKey: user.identifier)
+                    
                 } else {
                     userImagesNotInDB.insert(user)
                 }
@@ -104,25 +114,23 @@ private extension OfflineTimelineTVC {
         super.fetchProfileImage(for: users, completionHandler: completionHandler)
     }
     
-    private func superCheckUserCredentials() {
-        super.checkUserCredentials()
+    private func superFetchTweets(for request: MyTwitterDrop.Request) {
+        super.fetchTweets(for: request)
     }
     
     private func superInsertTweets(tweets: [MyTwitterDrop.Tweet]) {
         super.insertTweets(tweets)
     }
     
-    private func loadTweetsFromDatabase(completion: @escaping ([MyTwitterDrop.Tweet]) -> Void) {
+    private func loadTweetsFromDatabase(forUserId id: String, completion: @escaping ([MyTwitterDrop.Tweet]) -> Void) {
         container?.performBackgroundTask { [weak self] context in
-            if let fetchedTweets = try? Tweet.findTweets(in: context) {
+            if let timeline = try? Timeline.findTimeline(matchingUserId: id, in: context), let fetchedTweets = timeline.tweets?.allObjects as? [Tweet] {
                 if let tweetsToDisplay = self?.createTweets(from: fetchedTweets) {
                     completion(tweetsToDisplay)
-                } else {
-                    completion([])
+                    return
                 }
-            } else {
-                completion([])
             }
+            completion([])
         }
     }
     
@@ -132,7 +140,7 @@ private extension OfflineTimelineTVC {
             if let twitterUser = dbTweet.tweeter, let text = dbTweet.text, let created = dbTweet.created, let unique = dbTweet.unique {
                 let screenName = twitterUser.screenName ?? ""
                 let name = twitterUser.name ?? ""
-                let id = twitterUser.id ?? ""
+                let id = twitterUser.unique ?? ""
                 let profileImageUrl = twitterUser.profileImageUrl ?? ""
                 let user = MyTwitterDrop.User(screenName: screenName, name: name, id: id, verified: twitterUser.verified, profileImageURL: profileImageUrl)
                 let tweet = MyTwitterDrop.Tweet(text: text, user: user, created: created, identifier: unique)
@@ -158,10 +166,10 @@ private extension OfflineTimelineTVC {
         }
     }
     
-    private func updateDatabase(with tweets: [MyTwitterDrop.Tweet]) {
+    private func updateDatabase(with tweets: [MyTwitterDrop.Tweet], forUserId id: String) {
         container?.performBackgroundTask { context in
             for tweet in tweets {
-                _ = try? Tweet.findOrCreateTweet(matching: tweet, in: context)
+                _ = try? Tweet.findOrCreateTweet(matching: tweet, forUserId: id, in: context)
             }
             try? context.save()
         }
@@ -184,14 +192,13 @@ private extension OfflineTimelineTVC {
     private func startNetworkMonitor() {
         
         monitor.pathUpdateHandler = { path in
-            DispatchQueue.main.async {
-                if path.status == .satisfied {
-                    self.isConnected = true
-                } else {
-                    self.isConnected = false
-                }
+            if path.status == .satisfied {
+                self.isConnected = true
+            } else {
+                self.isConnected = false
             }
-//            print(path.isExpensive)
+            
+            //            print(path.isExpensive)
         }
         let queue = DispatchQueue(label: queueLbl, qos: .userInteractive)
         monitor.start(queue: queue)

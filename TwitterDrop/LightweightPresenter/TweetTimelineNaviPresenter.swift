@@ -10,33 +10,29 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import Foundation
 import UIKit
-import CoreData
 import MyTwitterDrop
+import OAuthSwift
 
-class TweetTableViewCell: UITableViewCell {
-
-    @IBOutlet weak var tweetProfileImageView: UIImageView!
-    @IBOutlet weak var tweetCreatedLbl: UILabel!
-    @IBOutlet weak var tweetUserLbl: UILabel!
-    @IBOutlet weak var tweetTextLbl: UILabel!
+// source: www.swiftbysundell.com/articles/lightweight-presenters-in-swift/
+struct TweetTimelineNaviPresenter {
     
-    private var container: NSPersistentContainer? = AppDelegate.persistentContainer
+    typealias Twitter = AppStrings.Twitter
     
-    var tweet: MyTwitterDrop.Tweet? { didSet { updateUI() } }
-    
-    private func updateUI() {
-        tweetUserLbl?.text = tweet?.user.description
-        tweetTextLbl?.text = tweet?.text
+    // MARK: - Public API
+    /**
+     Presents a tweet time line.
+     
+     - Parameter viewController: The presenting view controller.
+     - Parameter credentials: The Twitter c
+     */
+    func present(in viewController: UIViewController?, oauthSwift: OAuth1Swift, logoutHandler: @escaping () -> Void) {
         
-        if let userId = tweet?.user.id {
-            tweetProfileImageView?.image = TweetTimelineTableViewController.cache.value(forKey: userId)
-        }
-        
-        if let created = tweet?.created {
-            tweetCreatedLbl?.text = getTimeAndDateFormatted(date: created, dateFormat: "dd.MM.yyyy HH:mm:ss")
-        } else {
-            tweetCreatedLbl?.text = nil
-        }
+        let tweetTVC = OfflineTimelineTVC(oauthSwift: oauthSwift, logoutHandler: logoutHandler)
+        let navigationController = UINavigationController(rootViewController: tweetTVC)
+        navigationController.modalPresentationStyle = .fullScreen
+        navigationController.modalTransitionStyle = .crossDissolve
+        viewController?.present(navigationController, animated: true)
     }
 }

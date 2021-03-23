@@ -58,7 +58,7 @@ extension WebViewController: WKNavigationDelegate {
         if let url = navigationAction.request.url {
             if url.scheme == "mytwitter" {
                 UIApplication.shared.open(url, options: [:], completionHandler: nil)
-                dismissAuthorization(decisionHandler: decisionHandler)
+                decisionHandler(.cancel)
                 return
             }
         }
@@ -74,11 +74,6 @@ extension WebViewController: WKNavigationDelegate {
 
 // MARK: - Private action methods
 private extension WebViewController {
-    
-    private func dismissAuthorization(decisionHandler: (WKNavigationActionPolicy) -> Void) {
-        decisionHandler(.cancel)
-        self.dismissWebViewController()
-    }
     
     private func loadAddressURL() {
         guard let url = targetURL else {

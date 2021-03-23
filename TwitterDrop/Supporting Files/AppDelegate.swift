@@ -12,6 +12,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 import UIKit
 import CoreData
+import MyTwitterDrop
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -26,6 +27,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        clearKeychainIfWillUnistall()
         return true
     }
 
@@ -88,5 +90,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
 
+    func clearKeychainIfWillUnistall() {
+    let freshInstall = !UserDefaults.standard.bool(forKey: "alreadyInstalled")
+     if freshInstall {
+        Authorize.removeCredentials()
+        UserDefaults.standard.set(true, forKey: "alreadyInstalled")
+      }
+    }
+    
 }
 

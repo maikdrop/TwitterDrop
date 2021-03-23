@@ -34,7 +34,7 @@ public class TwitterUser: NSManagedObject {
         let twitterUser = TwitterUser(context: context)
         twitterUser.handle = twitterInfo.screenName
         twitterUser.name = twitterInfo.name
-        twitterUser.id = twitterInfo.id
+        twitterUser.unique = twitterInfo.identifier
         twitterUser.verified = twitterInfo.verified
         twitterUser.profileImageUrl = twitterInfo.profileImageURL.string
         return twitterUser
@@ -43,7 +43,7 @@ public class TwitterUser: NSManagedObject {
     static func findTwitterUser(userID: String, in context: NSManagedObjectContext) throws -> TwitterUser? {
         
         let request: NSFetchRequest<TwitterUser> = TwitterUser.fetchRequest()
-        request.predicate = NSPredicate(format: "id = %@", userID)
+        request.predicate = NSPredicate(format: "unique = %@", userID)
         
         do {
             let matches = try context.fetch(request)
@@ -60,13 +60,15 @@ public class TwitterUser: NSManagedObject {
     static func updateTwitterUser(userID: String, with image: UIImage, context: NSManagedObjectContext) throws -> TwitterUser? {
         
         let request: NSFetchRequest<TwitterUser> = TwitterUser.fetchRequest()
-        request.predicate = NSPredicate(format: "id = %@", userID)
+        request.predicate = NSPredicate(format: "unique = %@", userID)
         
         do {
             let matches = try context.fetch(request)
             if matches.count > 0 {
-                assert(matches.count == 1, "TwitterUser.findTwitterUser -- database inconsistency!")
-                matches[0].profileImage = image.pngData()
+                assert(matches.count == 1, "TwitterUser.updateTwitterUser -- database inconsistency!")
+                if matches[0].profileImage != image.pngData() {
+                    matches[0].profileImage = image.pngData()
+                }
                 return matches[0]
             }
         } catch {
