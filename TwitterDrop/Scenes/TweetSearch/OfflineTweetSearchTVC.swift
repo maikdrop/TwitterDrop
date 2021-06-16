@@ -14,50 +14,39 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
  */
 
 import UIKit
-import CoreData
 import MyTwitterDrop
+import Network
+import CoreData
 
-class OfflineTimelineTVC: TweetTimelineTableViewController {
-    
+class OfflineTweetSearchTVC: TweetSearchTableViewController {
+
     // MARK: - Properties
     var container: NSPersistentContainer? = AppDelegate.persistentContainer
-    
-    deinit { print("DEINIT - OfflineTimelineTVC") }
     
     // MARK: - Overriden methods from base class
     
     /**
-     Fetches tweets from the database and inserts them in the data source.
+     Fetches tweets from the database and inserts them in the data source when the network is offline.
      
      - Parameter request: The tweets request.
      */
-    override func fetchTweets(for request: Request) {
-       
-        if let id = Authentication.loggedInUserId {
-          
-            if tweets.isEmpty {
+    override func fetchTweets(for request: MyTwitterDrop.Request) {
+        
+        if Network.shared.isConnected {
+            
+            super.fetchTweets(for: request)
+        
+        } else {
+            
+            if searchText != nil {
                 
-                DBHelper.shared.lookUpInDatabaseForTimeline(of: id) { [weak self] fetchedTweets in
+                DBHelper.shared.loadTweetsFromDatabase(with: searchText!) { tweets in
                     
-                    self?.superInsertTweets(tweets: fetchedTweets)
-                    
-                    if fetchedTweets.isEmpty {
+                    if !tweets.isEmpty {
                         
-                        self?.superFetchTweets(for: request)
-                        
-                    } else {
-                        
-                        request.min_id = fetchedTweets.first?.identifier
-                        
-                        if let newerRequest = request.newer {
-                            
-                            self?.superFetchTweets(for: newerRequest)
-                        }
+                        super.insertTweets(tweets)
                     }
                 }
-            } else {
-                
-                self.superFetchTweets(for: request)
             }
         }
     }
@@ -68,23 +57,20 @@ class OfflineTimelineTVC: TweetTimelineTableViewController {
      - Parameter newTweets: The tweets to update in the database.
      */
     override func insertTweets(_ newTweets: [MyTwitterDrop.Tweet]) {
-        
-        if let id = Authentication.loggedInUserId {
-         
-            updateDatabase(with: newTweets, for: id)
-        }
         super.insertTweets(newTweets)
+        
+        updateDatabase(with: newTweets)
     }
-
+    
     /**
-     Fetches the profile image of Twitter users from the database and updates the UI. If a profile image wasn't found, it will be fetched from the internet.
+     Fetches the profile image of Twitter users from the database. If a profile image wasn't found, it will be fetched from the internet.
      
      - Parameter twitterUsers: The Twitter users from a Twitter request.
      */
     override func getProfileImage(for twitterUsers: Set<MyTwitterDrop.User>) {
         
         DBHelper.shared.lookUpInDatabase(for: twitterUsers) { [weak self] twitterUsersNotInDB, twitterUsersInDB in
-           
+            
             self?.superGetProfileImage(for: twitterUsersNotInDB)
             
             for (twitterUserInDB, profileImage) in twitterUsersInDB {
@@ -93,7 +79,7 @@ class OfflineTimelineTVC: TweetTimelineTableViewController {
                 
                 TwitterUtility.checkForNewProfileImage(of: twitterUserInDB) { isAvailable in
                     
-                    if !isAvailable && Network.shared.isConnected {
+                    if !isAvailable {
                         
                         self?.superGetProfileImage(for: Set([twitterUserInDB]))
                     }
@@ -110,70 +96,41 @@ class OfflineTimelineTVC: TweetTimelineTableViewController {
      */
     override func updateProfileImage(_ image: UIImage, for twitterUser: MyTwitterDrop.User) {
         super.updateProfileImage(image, for: twitterUser)
-
+        
         updateDatabase(with: image, for: twitterUser)
     }
 }
 
-// MARK: - Private methods for updating the database
-private extension OfflineTimelineTVC {
+// MARK: - Private methods for writing to database
+private extension OfflineTweetSearchTVC {
     
-    /**
-     Updates the profile image of a Twitter user in the database.
-     
-     - Parameter profileImage: The profile image of the Twitter user.
-     - Parameter userId: The user id of the Twitter user.
-     */
-    private func updateDatabase(with profileImage: UIImage, for twitterUser: MyTwitterDrop.User) {
-       
+    private func updateDatabase(with tweets: [MyTwitterDrop.Tweet]) {
         container?.performBackgroundTask { context in
-            
-            // TODO Error Handling
-            if profileImage != TwitterUtility.defaultProfileImage {
-  
-                _ = try? TwitterUser.updateTwitterUser(matching: twitterUser, with: profileImage, in: context)
-                
-                try? context.save()
+            for tweet in tweets {
+                // TODO Error Handling
+                _ = try? Tweet.findOrCreateTweet(matching: tweet, in: context)
             }
+            try? context.save()
         }
     }
     
-    /**
-     Updates the timeline of a Twitter user with new tweets in the database.
-     
-     - Parameter tweets: The new Tweets of the Timeline.
-     - Parameter userId: The user id of the Twitter user.
-     */
-    private func updateDatabase(with tweets: [MyTwitterDrop.Tweet], for userId: String) {
-        
+    private func updateDatabase(with profileImage: UIImage, for twitterUser: MyTwitterDrop.User) {
         container?.performBackgroundTask { context in
-           
-            for tweet in tweets {
-                
-                // TODO Error Handling
-                _ = try? Timeline.findOrCreateTimeline(matching: userId, tweet: tweet, in: context)
-            }
+            _ = try? TwitterUser.updateTwitterUser(matching: twitterUser, with: profileImage, in: context)
+            // TODO Error Handling
             try? context.save()
         }
     }
 }
 
-// MARK: - Call base class methods when self is weak.
-private extension OfflineTimelineTVC {
+// MARK: - Call base class methods when self is weak
+private extension OfflineTweetSearchTVC {
     
-    private func superGetProfileImage(for twitterUsers: Set<MyTwitterDrop.User>) {
-        super.getProfileImage(for: twitterUsers)
+    private func superGetProfileImage(for tweeters: Set<MyTwitterDrop.User>) {
+        super.getProfileImage(for: tweeters)
     }
     
     private func superUpdateProfileImage(_ image: UIImage, for twitterUser: MyTwitterDrop.User) {
         super.updateProfileImage(image, for: twitterUser)
-    }
-    
-    private func superFetchTweets(for request: MyTwitterDrop.Request) {
-        super.fetchTweets(for: request)
-    }
-    
-    private func superInsertTweets(tweets: [MyTwitterDrop.Tweet]) {
-        super.insertTweets(tweets)
     }
 }

@@ -10,30 +10,37 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  
  Abstract:
- Source: www.swiftbysundell.com/articles/lightweight-presenters-in-swift/
+ The class offers functions in order to interact with the Url entity of the database.
  */
 
 import UIKit
+import CoreData
 import MyTwitterDrop
-import OAuthSwift
 
-struct TweetTimelineNaviPresenter {
-    
+public class Url: NSManagedObject {
+
     /**
-     Presents a tweet timeline.
+     Creates urls.
      
-     - Parameter oauthSwift: The authentication object with user credentials for a Twitter request.
-     - Parameter viewController: The presenting view controller.
-     - Parameter logoutHandler: The handler for the user logout.
+     - Parameter tweet: A tweet from Twitter.
+     - Parameter context: The context of the database.
+     
+     - Returns: The created urls.
      */
-    func presentTimeline(oauthSwift: OAuth1Swift, in viewController: UIViewController?, logoutHandler: @escaping () -> Void) {
+    static func createUrl(matching tweet: MyTwitterDrop.Tweet, in context: NSManagedObjectContext) -> [Url] {
         
-        let tweetTVC = OfflineTimelineTVC(oauthSwift: oauthSwift, logoutHandler: logoutHandler)
+        var urls = [Url]()
         
-        let navigationController = UINavigationController(rootViewController: tweetTVC)
-        navigationController.modalPresentationStyle = .fullScreen
-        navigationController.modalTransitionStyle = .flipHorizontal
-        
-        viewController?.present(navigationController, animated: true)
+        if let tweetUrls = tweet.urls {
+            for url in tweetUrls {
+                let newUrl = Url(context: context)
+                newUrl.displayUrl = url.displayUrl
+                newUrl.expandedUrl = url.expandedUrl
+                newUrl.url = url.url
+                newUrl.indices = url.indices
+                urls.append(newUrl)
+            }
+        }
+        return urls
     }
 }

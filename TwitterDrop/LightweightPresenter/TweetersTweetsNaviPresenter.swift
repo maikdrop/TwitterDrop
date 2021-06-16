@@ -17,23 +17,22 @@ import UIKit
 import MyTwitterDrop
 import OAuthSwift
 
-struct TweetTimelineNaviPresenter {
+struct TweetersTweetsNaviPresenter {
     
     /**
-     Presents a tweet timeline.
+     Presents tweets of a tweeter.
      
-     - Parameter oauthSwift: The authentication object with user credentials for a Twitter request.
+     - Parameter mention: The text that the tweets contain.
+     - Parameter tweeter: The tweeter of the tweets.
      - Parameter viewController: The presenting view controller.
-     - Parameter logoutHandler: The handler for the user logout.
      */
-    func presentTimeline(oauthSwift: OAuth1Swift, in viewController: UIViewController?, logoutHandler: @escaping () -> Void) {
+    func presentTweets(with mention: String, from tweeter: TwitterUser, in viewController: UIViewController) {
         
-        let tweetTVC = OfflineTimelineTVC(oauthSwift: oauthSwift, logoutHandler: logoutHandler)
+        let tweetersTweetsTVC = TweetersTweetsTableViewController()
+        tweetersTweetsTVC.mention = mention
+        tweetersTweetsTVC.tweeter = tweeter
+        tweetersTweetsTVC.navigationItem.title = mention
         
-        let navigationController = UINavigationController(rootViewController: tweetTVC)
-        navigationController.modalPresentationStyle = .fullScreen
-        navigationController.modalTransitionStyle = .flipHorizontal
-        
-        viewController?.present(navigationController, animated: true)
+        viewController.show(tweetersTweetsTVC, sender: viewController)
     }
 }

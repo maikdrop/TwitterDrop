@@ -10,30 +10,13 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  
  Abstract:
- Source: www.swiftbysundell.com/articles/lightweight-presenters-in-swift/
+ Simple delegation protocol that handles the communication of a list of suggested tweeters.
  */
 
-import UIKit
-import MyTwitterDrop
-import OAuthSwift
+import Foundation
 
-struct TweetTimelineNaviPresenter {
+protocol SuggestedTweeterDelegate: AnyObject {
     
-    /**
-     Presents a tweet timeline.
-     
-     - Parameter oauthSwift: The authentication object with user credentials for a Twitter request.
-     - Parameter viewController: The presenting view controller.
-     - Parameter logoutHandler: The handler for the user logout.
-     */
-    func presentTimeline(oauthSwift: OAuth1Swift, in viewController: UIViewController?, logoutHandler: @escaping () -> Void) {
-        
-        let tweetTVC = OfflineTimelineTVC(oauthSwift: oauthSwift, logoutHandler: logoutHandler)
-        
-        let navigationController = UINavigationController(rootViewController: tweetTVC)
-        navigationController.modalPresentationStyle = .fullScreen
-        navigationController.modalTransitionStyle = .flipHorizontal
-        
-        viewController?.present(navigationController, animated: true)
-    }
+    func didScrollThroughTweeters()
+    func didSelectTweeter(_ tweeter: TwitterUser)
 }

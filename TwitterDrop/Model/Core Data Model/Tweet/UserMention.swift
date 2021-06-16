@@ -10,30 +10,37 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  
  Abstract:
- Source: www.swiftbysundell.com/articles/lightweight-presenters-in-swift/
+ The class offers functions in order to interact with the UserMention entity of the database.
  */
 
 import UIKit
+import CoreData
 import MyTwitterDrop
-import OAuthSwift
 
-struct TweetTimelineNaviPresenter {
+public class UserMention: NSManagedObject {
     
     /**
-     Presents a tweet timeline.
+     Creates user mentions.
      
-     - Parameter oauthSwift: The authentication object with user credentials for a Twitter request.
-     - Parameter viewController: The presenting view controller.
-     - Parameter logoutHandler: The handler for the user logout.
+     - Parameter tweet: A tweet from Twitter.
+     - Parameter context: The context of the database.
+     
+     - Returns: The created user mentions.
      */
-    func presentTimeline(oauthSwift: OAuth1Swift, in viewController: UIViewController?, logoutHandler: @escaping () -> Void) {
+    static func createUserMention(matching tweet: MyTwitterDrop.Tweet, in context: NSManagedObjectContext) -> [UserMention] {
         
-        let tweetTVC = OfflineTimelineTVC(oauthSwift: oauthSwift, logoutHandler: logoutHandler)
-        
-        let navigationController = UINavigationController(rootViewController: tweetTVC)
-        navigationController.modalPresentationStyle = .fullScreen
-        navigationController.modalTransitionStyle = .flipHorizontal
-        
-        viewController?.present(navigationController, animated: true)
+        var userMentions = [UserMention]()
+       
+        if let tweetUserMentions = tweet.userMentions {
+            for userMention in tweetUserMentions {
+                let newUserMention = UserMention(context: context)
+                newUserMention.name = userMention.name
+                newUserMention.screenName = userMention.screenName
+                newUserMention.id = userMention.identifier
+                newUserMention.indices = userMention.indices
+                userMentions.append(newUserMention)
+            }
+        }
+        return userMentions
     }
 }

@@ -8,6 +8,9 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ 
+ Abstract:
+ The table view controller shows a list of tweets that represents the timeline of a Twitter user. The tweets are fetched from Twitter and the timeline can be refreshed. Additionaly, the Twitter user can be logged out and a new view controller can be displayed in order to look for tweets.
  */
 
 import UIKit
@@ -15,23 +18,23 @@ import OAuthSwift
 import MyTwitterDrop
 import Network
 
-class TweetTimelineTableViewController: UITableViewController {
+class TweetTimelineTableViewController: UITableViewController, HandleTweets {
     
     // MARK: - Properties
     private let loadingVC = LoadingViewController()
-    private let authorize = Authorize(consumerKey: DeveloperCredentials.consumerKey, consumerSecret: DeveloperCredentials.consumerSecret)
-    private var oauthSwift: OAuth1Swift
+    private let authorize = Authentication(consumerKey: DeveloperCredentials.consumerKey, consumerSecret: DeveloperCredentials.consumerSecret)
+    private let oauthSwift: OAuth1Swift
     
-    private var lastTwitterRequest: MyTwitterDrop.Request?
-    private var tweets = [Array<MyTwitterDrop.Tweet>]()
-    
-    private lazy var activityIndicator = configureActivityIndicator()
-    static let cache = Cache<String, UIImage>()
-
+    private var lastTwitterRequest: Request?
+    private(set) var tweets = [Array<MyTwitterDrop.Tweet>]()
+ 
     private let logoutHandler: () -> Void
-    private(set) var loggedInUser: User? {
+    
+    private var verifiedUser: User? {
         didSet {
-            if loggedInUser == nil {
+            if verifiedUser != nil {
+                initialTweetsFetch(for: verifiedUser!)
+            } else {
                 logoutHandler()
             }
         }
@@ -50,325 +53,354 @@ class TweetTimelineTableViewController: UITableViewController {
     
     deinit { print("DEINIT - TweetTimelineTableViewController") }
     
-    // MARK: - API in order to subclass the table view conntroller
-    func fetchProfileImage(for users: Set<MyTwitterDrop.User>, completionHandler: @escaping () -> Void) {
-        if users.isEmpty { completionHandler() }
-        var pendingUrls = Set(users.compactMap({ $0.getProfileImage(sizeCategory: .original) }))
-        for user in users {
-            if let url = user.getProfileImage(sizeCategory: .original) {
-                URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
-                    guard error == nil else {
-                        print(#function)
-                        print("Error: \(error!.localizedDescription)")
-                        return
-                    }
-                    guard let responseData = data else {
-                        print(#function)
-                        print("Error: did not receive data")
-                        self?.verify(response: response, for: user)
-                        return
-                    }
-                    if let image = UIImage(data: responseData) {
-                        Self.cache.insert(image, forKey: user.identifier)
-                        self?.setProfileImage(for: user.identifier, image: image)
-                        pendingUrls.remove(url)
-                        if pendingUrls.isEmpty {
-                            completionHandler()
-                        }
-                    }
-                }.resume()
-            }
-        }
-    }
+    // MARK: - API in order to subclass functionality for tweets and profile image of the Twitter user
     
-    func setProfileImage(for userID: String, image: UIImage) {
-        if Authorize.loggedUserID == userID {
-            DispatchQueue.main.async {
-                self.navigationItem.rightBarButtonItem = self.configureLogoutBarBtn(with: image)
-            }
-        }
-    }
-    
-    func fetchTweets(for request: MyTwitterDrop.Request) {
-        lastTwitterRequest = request
-        request.fetchTweets() { [weak self] newTweets in
-            if request == self?.lastTwitterRequest {
-                if newTweets.isEmpty {
-                    print(newTweets.count)
-                    DispatchQueue.main.async {
-                        self?.tableView.refreshControl?.endRefreshing()
-                        self?.activityIndicator.stopAnimating()
+    /**
+     Fetches tweets from Twitter via network request and inserts them in the data source.
+     
+     - Parameter request: The tweets request.
+     */
+    func fetchTweets(for request: Request) {
+      
+        if Network.shared.isConnected {
+            
+            lastTwitterRequest = request
+            
+            request.fetchTweets() { [weak self] newTweets in
+                
+                if request == self?.lastTwitterRequest {
+                    
+                    if newTweets.isEmpty {
+                        
+                        self?.removeActivityIndicator()
+                        
+                    } else {
+                        
+                        self?.insertTweets(newTweets)
                     }
-                } else {
-                    self?.insertTweets(newTweets)
                 }
             }
-        }
-    }
-    
-    func insertTweets(_ newTweets: [MyTwitterDrop.Tweet]) {
-        
-        let tweeter = getTweeterFrom(newTweets)
-        if !tweets.isEmpty && !newTweets.isEmpty {
-            if tweets.last!.last!.created > newTweets.first!.created {
-                insertOldTweets(newTweets, tweeter)
-            } else {
-                insertLatestTweets(newTweets, tweeter)
-            }
         } else {
-            insertLatestTweets(newTweets, tweeter)
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                
+                self.removeActivityIndicator()
+                
+                self.infoAlertWithLinkToSettings(title: "Turn Off Airplane Mode or Use Wi-Fi to Access Data", message: "")
+            }
         }
     }
     
-    func credentialCheckFailed() {
-       loggedInUser = nil
+    /**
+     Inserts tweets into data source and updates the UI.
+     
+     - Parameter tweets: Tweets to insert.
+     */
+    func insertTweets(_ tweets: [MyTwitterDrop.Tweet]) {
+       
+        if !tweets.isEmpty {
+            
+            self.tweets.insert(tweets, at: 0)
+            
+            updateUIForTweets()
+            
+            if self.lastTwitterRequest?.min_id == self.tweets.first?.first?.identifier {
+               
+                self.removeActivityIndicator()
+            }
+            
+            let tweeters = Set(tweets.map { $0.user })
+            
+            getProfileImage(for: tweeters)
+        }
+    }
+    
+    /**
+     Fetches the profile image of Twitter users via network request.
+     
+     - Parameter twitterUsers: The Twitter users from a Twitter request.
+     */
+    func getProfileImage(for twitterUsers: Set<MyTwitterDrop.User>) {
+        
+        twitterUsers.forEach { user in
+            
+            TwitterUtility.getProfileImage(from: user) { [weak self] data in
+                
+                self?.updateProfileImage(data.image, for: data.twitterUser)
+            }
+        }
+    }
+    
+    /**
+     Updates the profile image of a twitter in the UI.
+     
+     - Parameter image: The profile image of the Twitter user.
+     - Parameter twitterUserId: The user id of the Twitter user.
+     */
+    func updateProfileImage(_ image: UIImage, for twitterUser: MyTwitterDrop.User) {
+       
+        TwitterUtility.cache.insert(image, forKey: twitterUser.identifier)
+
+        if twitterUser.identifier == Authentication.loggedInUserId {
+
+            updateUIForLoggedInUser(with: image)
+        }
+
+        DispatchQueue.main.async {
+
+            self.updateVisibleCells()
+        }
     }
 }
 
-// MARK: - Default Methods
+// MARK: - Default view controller methods
 extension TweetTimelineTableViewController {
         
     override func viewDidLoad() {
         super.viewDidLoad()
-        configureTableView()
-        checkUserCredentials() { [weak self] in
-            self?.initialDataFetch()
-        }
-    }
-    
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        if tableView.tableFooterView == nil {
-            tableView.tableFooterView = configureFooterView()
-        }
+        
+        tableView = UITableView.tweets
+        
+        Network.shared.startNetworkMonitor()
+        
+        configureRefreshControl()
+        configureNavigationItems()
+      
+        checkUserCredentials()
     }
 }
 
-// MARK: - Table view data source and delegate methods
+// MARK: - Table View
 extension TweetTimelineTableViewController {
     
     // Data Source
     override func numberOfSections(in tableView: UITableView) -> Int {
+      
         tweets.count
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        
         tweets[section].count
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
         let cell = tableView.dequeueReusableCell(withIdentifier: AppStrings.TweetCell.identifier, for: indexPath)
+        
         let tweet: MyTwitterDrop.Tweet = tweets[indexPath.section][indexPath.row]
+        
         if let tweetCell = cell as? TweetTableViewCell {
+            
             tweetCell.tweet = tweet
         }
         return cell
     }
     
-    // Delegate
-    override func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        if tableView.isDragging, tableView.isDecelerating || tableView.isTracking {
-            if tableView.contentOffset.y >= (tableView.contentSize.height - tableView.frame.size.height) + 40 {
-                if !activityIndicator.isAnimating {
-                    activityIndicator.startAnimating()
-                    if let last = tweets.last?.last, let id = Int(last.identifier) {
-                        let oldRequest = MyTwitterDrop.Request(oauthSwift: oauthSwift, latestTweetID: String(id - 1), count: 15)
-                        fetchTweets(for: oldRequest)
-                    }
-                } else {
-                    activityIndicator.stopAnimating()
-                }
-            }
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+       
+        if section == 0 && lastTwitterRequest != nil {
+            
+            return AppStrings.Timeline.sectionTitleLatestTweets
         }
+        return AppStrings.Timeline.sectionTitleOlderTweets
     }
 }
 
 // MARK: - Private target methods
 private extension TweetTimelineTableViewController {
     
+    /**
+     Handles the target action of the refresh control of the table view in order to refresh the tweets.
+     */
     @objc private func handleRefreshControl() {
         
         if let request = lastTwitterRequest?.newer {
+            
             fetchTweets(for: request)
+            
         } else {
-            tableView.refreshControl?.endRefreshing()
+           
+            checkUserCredentials()
         }
     }
     
+    /**
+     Handles the target action of the logout button in order to logout the user.
+     */
     @objc private func logoutActBtn() {
-        logoutAlert(title: AppStrings.Twitter.alertTitle, message: AppStrings.Twitter.logoutAlertMsg, actionHandler: {
-            self.loggedInUser = nil
-        })
+        
+        logoutAlert(title: AppStrings.Timeline.alertTitle, message: AppStrings.Timeline.logoutAlertMsg) {
+            
+            self.verifiedUser = nil
+        }
+    }
+    
+    /**
+     Handles the target action of the search button in order to search for tweets.
+     */
+    @objc private func searchActBtn() {
+       
+        TweetSearchNaviPresenter().presentTweets(oauthSwift: oauthSwift, in: self)
     }
 }
 
-// MARK: - Private methods for network communication
+// MARK: - Private utility methods for tweet fetching
 private extension TweetTimelineTableViewController {
     
-    private func initialDataFetch() {
+    /**
+     Checks the user credentials of the logged in user.
+     */
+    private func checkUserCredentials() {
         
-        if let user = loggedInUser {
-            fetchProfileImage(for: Set([user])) { [weak self] in
-                if let profileImage = Self.cache.value(forKey: user.identifier) {
-                    self?.setProfileImage(for: user.identifier, image: profileImage)
-                }
-                if let oauthSwift = self?.oauthSwift {
-                    let request = Request(oauthSwift: oauthSwift, latestTweetID: self?.tweets.first?.first?.identifier ?? "", count: 15)
-                    self?.fetchTweets(for: request)
+        add(loadingVC)
+
+        if Network.shared.isConnected {
+      
+            Authentication.checkUserCredentials(for: oauthSwift) { [weak self] result in
+                
+                switch result {
+                case .success(let user):
+                    self?.verifiedUser = user
+                case .failure(let error):
+                    print(error.localizedDescription)
+                    self?.verifiedUser = nil
+                    self?.removeActivityIndicator()
                 }
             }
+            
+        } else {
+           
+            initialTweetsFetch(for: TwitterUtility.unverifiedUser)
         }
     }
     
-    private func checkUserCredentials(completion: @escaping () -> Void) {
-        Authorize.checkUserCredentials(for: oauthSwift) { [weak self] result in
-            switch result {
-            case .success(let user):
-                self?.loggedInUser = user
-                completion()
-            case .failure(let error):
-                print(#function)
-                print(error.localizedDescription)
-                self?.tableView.refreshControl?.endRefreshing()
-                self?.credentialCheckFailed()
-            }
-        }
-    }
-    
-    private func verify(response: URLResponse?, for user: MyTwitterDrop.User) {
+    /**
+     The first tweets fetch for timeline after user log in.
+     
+     - Parameter user: The logged in user.
+     */
+    private func initialTweetsFetch(for user: MyTwitterDrop.User) {
         
-        if let httpResponse = response as? HTTPURLResponse {
-            
-            if HTTPStatusCode(code: httpResponse.statusCode) == .client {
-                if httpResponse.statusCode == 403 || httpResponse.statusCode == 404 {
-                    print(#function)
-                    // TODO retrieve latest user data - GET https://api.twitter.com/1.1/users/show.json
-                }
-            }
-        }
-    }
-    
-    private func checkForNewProfileImage(for user: MyTwitterDrop.User, completion: @escaping (Bool) -> Void) {
+        getProfileImage(for: Set([user]))
         
-        if let url = user.getProfileImage(sizeCategory: .original) {
-            
-            var request = URLRequest(url: url)
-            request.httpMethod = "HEAD"
-            request.timeoutInterval = 5
-            
-            URLSession.shared.dataTask(with:request) { [weak self] (_, response, error) in
-                guard error == nil else {
-                    return
-                }
-                self?.verify(response: response, for: user)
-            }.resume()
-        }
+        fetchTweets(for: twitterRequest())
+    }
+
+    /**
+     Returns a Twitter request.
+     
+     - Returns: The Twitter request, which is used to fetch tweets for the user timeline.
+     */
+    private func twitterRequest() -> Request {
+        
+        return Request(oauthSwift: oauthSwift, count: tweetCountToFetch)
     }
 }
 
-// MARK: - Private methods for tweet handling
+// MARK: - UI updates
 private extension TweetTimelineTableViewController {
     
-    private func oldestTweetsRequest(for requestType: MyTwitterDrop.Request.RequestTypes) -> MyTwitterDrop.Request? {
-        if let lastSection = tweets.last, let lastElement = lastSection.last?.identifier, let id = Int(lastElement) {
-            
-            return MyTwitterDrop.Request(oauthSwift: oauthSwift, oldestTweetID: String(id - 1), count: 15)
-        }
-        return nil
-    }
-    
-    
-    private func insertLatestTweets(_ latestweets: [MyTwitterDrop.Tweet], _ tweeter: Set<MyTwitterDrop.User>) {
-        if !latestweets.isEmpty {
-            tweets.insert(latestweets, at: 0)
-            fetchProfileImage(for: tweeter) { [weak self] in
-                DispatchQueue.main.async {
-                    self?.tableView.insertSections([0], with: .fade)
-                    if self?.lastTwitterRequest?.min_id == latestweets.first?.identifier {
-                        self?.tableView.refreshControl?.endRefreshing()
-                    }
-                }
+    /**
+     Updates the UI when new tweets were inserted.
+     */
+    private func updateUIForTweets() {
+        
+        DispatchQueue.main.async {
+          
+            self.tableView.insertSections([0], with: .fade)
+           
+            if self.tweets.count > 1 {
+                
+                self.tableView.headerView(forSection: 1)?.textLabel?.text = AppStrings.Timeline.sectionTitleOlderTweets
             }
         }
-    }
-    
-    private func insertOldTweets(_ oldTweets: [MyTwitterDrop.Tweet], _ tweeter: Set<MyTwitterDrop.User>) {
-        if oldTweets.count > 1 {
-            tweets.append(oldTweets)
-            fetchProfileImage(for: tweeter) { [weak self] in
-                if let sections = self?.tweets.count, sections >= 1 {
-                    DispatchQueue.main.async {
-                        self?.tableView.insertSections([sections-1], with: .fade)
-                        self?.activityIndicator.stopAnimating()
-                    }
-                }
-            }
-        }
-    }
-    
-    private func getTweeterFrom(_ tweets: [MyTwitterDrop.Tweet]) -> Set<MyTwitterDrop.User> {
-        var usersFromTweets = [MyTwitterDrop.User]()
-        tweets.forEach { usersFromTweets.append($0.user) }
-        return Set(usersFromTweets)
     }
 
-    
+    /**
+     Updates the profile image of the logged in user.
+     
+     - Parameter profileImage: The new profile image of the logged in user.
+     */
+    private func updateUIForLoggedInUser(with profileImage: UIImage) {
+        
+        DispatchQueue.main.async {
+            
+            self.navigationItem.rightBarButtonItem = self.configureLogoutButton(with: profileImage)
+        }
+    }
+
+    /**
+     Removes all activity indicators from the UI.
+     */
+    private func removeActivityIndicator() {
+        
+        self.tableView.refreshControl?.endRefreshing()
+        self.loadingVC.remove()
+    }
 }
 
-// MARK: - Private configuration methods
+// MARK: - Private methods to configure UI elements.
 private extension TweetTimelineTableViewController {
     
-    private func configureFooterView() -> UIView {
-        let width = tableView.frame.size.width
-        let customView = UIView(frame: CGRect(x: 0, y: 0, width: width, height: 80))
-        activityIndicator.center = customView.center
-        customView.addSubview(activityIndicator)
-        return customView
+    /**
+     Configures the navigation items: title and searchbutton.
+     */
+    private func configureNavigationItems() {
+
+        navigationItem.leftBarButtonItem = configureSearchBtn()
+        navigationItem.rightBarButtonItem = configureLogoutButton(with: TwitterUtility.defaultProfileImage ?? UIImage())
+        navigationItem.title = AppStrings.Timeline.title
     }
     
+    /**
+     Configures the refresh control of the table view.
+     */
     private func configureRefreshControl () {
-       tableView.refreshControl = UIRefreshControl()
-       tableView.refreshControl?.addTarget(self, action:
-                                          #selector(handleRefreshControl),
-                                          for: .valueChanged)
+        
+        tableView.refreshControl = UIRefreshControl()
+        tableView.refreshControl?.addTarget(self,
+                                            action: #selector(handleRefreshControl),
+                                            for: .valueChanged)
     }
     
-    private func configureActivityIndicator() -> UIActivityIndicatorView {
-        let activityIndicator = UIActivityIndicatorView(style: .large)
-        activityIndicator.hidesWhenStopped = true
-        return activityIndicator
+    /**
+     Configures a search button for the navigation bar.
+     
+     - Returns: The configured search button.
+     */
+    private func configureSearchBtn() -> UIBarButtonItem {
+        
+        let searchBtn = UIBarButtonItem.searchBtn
+        
+        searchBtn.action = #selector(searchActBtn)
+        searchBtn.target = self
+        
+        return searchBtn
     }
     
-    private func configureLogoutBarBtn(with image: UIImage) -> UIBarButtonItem? {
-        if let resizedImage = image.resizeImage(for: CGSize(width: 42, height: 42)) {
-            let button = UIButton()
-            button.setImage(resizedImage, for: .normal)
+    /**
+     Configures a logout button for the navigation bar.
+     
+     - Parameter profileImage: The profile image of the logout button.
+     
+     - Returns: The configured logout button.
+     */
+    private func configureLogoutButton(with profileImage: UIImage) -> UIBarButtonItem? {
+        
+        if let logoutBtn = UIBarButtonItem.makeLogoutButton(with: profileImage, size: userImageSize), let button = logoutBtn.customView as? UIButton {
+            
             button.addTarget(self, action: #selector(logoutActBtn), for: .touchUpInside)
-            let barButton = UIBarButtonItem(customView: button)
-            barButton.customView?.layer.cornerRadius = resizedImage.size.height / 2
-            barButton.customView?.clipsToBounds = true
-            return barButton
+            
+            return logoutBtn
         }
         return nil
     }
-    
-    private func configureTableView() {
-        let textFieldCell = UINib(nibName: AppStrings.TweetCell.identifier,bundle: nil)
-        tableView.register(textFieldCell, forCellReuseIdentifier: AppStrings.TweetCell.identifier)
-        tableView.estimatedRowHeight = tableView.rowHeight
-        tableView.rowHeight = UITableView.automaticDimension
-        configureRefreshControl()
-        tableView.refreshControl?.beginRefreshing()
-    }
-    
-    /*
-    // MARK: - Navigation
+}
 
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
+// MARK: - Constants
+private extension TweetTimelineTableViewController {
+    
+    private var tweetCountToFetch: Int { 20 }
+    private var userImageSize: CGSize { CGSize(width: 35, height: 35) }
 }

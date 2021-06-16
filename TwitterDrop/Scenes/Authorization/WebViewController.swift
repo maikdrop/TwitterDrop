@@ -8,6 +8,9 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ 
+ Abstract:
+ Renders the login (username and password) view from Twitter and handles the navigation after login.
  */
 
 import UIKit
@@ -31,7 +34,7 @@ class WebViewController: OAuthWebViewController {
     deinit { print("DEINIT - WebViewController") }
 }
 
-// MARK: - Default methods
+// MARK: - Default view controller methods
 extension WebViewController {
     
     override func viewDidLoad() {
@@ -44,19 +47,17 @@ extension WebViewController {
     }
 }
 
-// MARK: - Webkit navigation delegate methods
+// MARK: - Implementing WK navigation delegate protocol
 extension WebViewController: WKNavigationDelegate {
     
-    // Delegate method to remove loading wheel
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        self.loadingVC.remove()
+        loadingVC.remove()
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-        
         // here we handle internally the callback url and call method that call handleOpenURL (not app scheme used)
         if let url = navigationAction.request.url {
-            if url.scheme == "mytwitter" {
+            if url.scheme == URL(string: AppStrings.Authorize.callBackURL)?.scheme {
                 UIApplication.shared.open(url, options: [:], completionHandler: nil)
                 decisionHandler(.cancel)
                 return
@@ -67,14 +68,17 @@ extension WebViewController: WKNavigationDelegate {
     
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
         print("\(error)")
-        self.loadingVC.remove()
-        self.dismissWebViewController()
+        loadingVC.remove()
+        dismissWebViewController()
     }
 }
 
 // MARK: - Private action methods
 private extension WebViewController {
     
+    /**
+     Loads the url for Twitter authorization.
+     */
     private func loadAddressURL() {
         guard let url = targetURL else {
             return

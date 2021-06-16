@@ -17,8 +17,11 @@ extension UIViewController {
     var contentViewController: UIViewController {
         
         if let visibleVC = (self as? UINavigationController)?.visibleViewController {
+           
             return visibleVC
+        
         } else {
+            
             return self
         }
     }

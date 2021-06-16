@@ -17,23 +17,32 @@ import UIKit
 import MyTwitterDrop
 import OAuthSwift
 
-struct TweetTimelineNaviPresenter {
+struct TweetSearchNaviPresenter {
+    
+    typealias Twitter = AppStrings.Timeline
     
     /**
-     Presents a tweet timeline.
+     Presents a list of searched tweets.
      
      - Parameter oauthSwift: The authentication object with user credentials for a Twitter request.
      - Parameter viewController: The presenting view controller.
-     - Parameter logoutHandler: The handler for the user logout.
      */
-    func presentTimeline(oauthSwift: OAuth1Swift, in viewController: UIViewController?, logoutHandler: @escaping () -> Void) {
-        
-        let tweetTVC = OfflineTimelineTVC(oauthSwift: oauthSwift, logoutHandler: logoutHandler)
-        
+    func presentTweets(oauthSwift: OAuth1Swift, in viewController: UIViewController?) {
+
+        let tweetTVC = OfflineTweetSearchTVC(oauthSwift: oauthSwift)
+        tweetTVC.navigationItem.largeTitleDisplayMode = .never
+
         let navigationController = UINavigationController(rootViewController: tweetTVC)
-        navigationController.modalPresentationStyle = .fullScreen
-        navigationController.modalTransitionStyle = .flipHorizontal
+
+        tweetTVC.navigationItem.leftBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .cancel,
+            target: navigationController,
+            action: #selector(UIViewController.dismissWithAnimation)
+        )
         
+        navigationController.modalPresentationStyle = .fullScreen
+        navigationController.modalTransitionStyle = .coverVertical
+       
         viewController?.present(navigationController, animated: true)
     }
 }

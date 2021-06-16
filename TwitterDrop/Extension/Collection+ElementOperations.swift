@@ -15,27 +15,26 @@ import Foundation
 extension Collection where Element: Hashable {
     
     /**
-    Creates an array with unique elements.
+     Returns an array with unique elements.
      
-    - Returns: an array with unique elements
+    - Returns: The array with unique elements.
     */
     func uniqued() -> [Element] {
         var seen = Set<Element>()
-        return self.filter {seen.insert($0).inserted}
+        return self.filter { seen.insert($0).inserted }
     }
 }
 
 extension Collection {
     
     /**
-     Verifies if an array contains an element at given index.
+     Verifies if a collection contains an element.
      
-     - Parameter index: The index to verify.
+     - Parameter index: The index of the element.
      
-     - Returns: either an element at the index or nil
+     - Returns: Either the element at the index or nil.
      */
     subscript(optional index: Index) -> Iterator.Element? {
-        return self.indices.contains(index) ? self[index] : nil
+        self.indices.contains(index) ? self[index] : nil
     }
-    
 }
