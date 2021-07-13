@@ -25,7 +25,7 @@
   * [2.3. JSON Parsing](#23-json-parsing)
 * [3. UI](#3-ui)
   * [3.1. Tweets](#31-tweets)
-  * [3.2. Indicators and Alerts](#32-indicators-and-alerts)
+  * [3.2. Spinning Indicators and Alerts](#32-spinning-indicators-and-alerts)
 
 ## 1. About the App
 
@@ -100,7 +100,7 @@ New tweets are fetched from Twitter and will be inserted directly into the timel
 
 As you can see in the next graphic, stored tweets and profile images can be fetched and used directly from the database. 
 
-The big advantage of this approach is that the user saves on mobile data traffic and battery consumption. Additionally you get a better performance because fetching data from a local database is much faster than fetching from an external source.</p>
+The big advantage of this approach is that the user saves on mobile data traffic and battery consumption. Additionally, you get a better performance because fetching data from a local database is much faster than fetching from an external source.</p>
 
 <br/>
 <br/>
@@ -122,7 +122,7 @@ The big advantage of this approach is that the user saves on mobile data traffic
 
 There are two tasks where network requests are used in the present project. 
 
-* Fetching tweets from Twitter
+* Twitter Requests
 * Fetching profile images of Twitter users from a url
 
 #### 2.2.1. Twitter Requests
@@ -151,7 +151,7 @@ Because of the entities that a tweet can contain, the properties in the tweet st
 
 ### 3.1. Tweets
 
-<p align="justify">A List of Tweets is used in several views and contexts. There are different possibilities to make the list reusable. One possibility is to reuse a TableViewController with a custom  configured tweet cell. The problem is that the UI logic e.g. selecting a cell or swipe action will be reused as well. It makes more sense to make the tweet cell itself reusable. That can be done programmatically or using the interface builder (IB). The IB was chosen because the handling is easier to arrange and constraint parts of the UI e.g. labels and images.</p>
+<p align="justify">A List of Tweets is used in several views and contexts. There are different possibilities to make the list reusable. One possibility is to reuse a TableViewController with a custom  configured tweet cell. The problem is that the UI logic e.g. selecting a cell or swipe action will be reused as well. It makes more sense to make the tweet cell itself reusable. That can be done programmatically or using the interface builder (IB). The IB was chosen because the handling is easier to arrange and constraint parts of the UI e.g. labels and images. Graphic 3 shows the result of the IB in Xcode.</p>
 
 <br/>
 <figure>
@@ -162,16 +162,29 @@ Because of the entities that a tweet can contain, the properties in the tweet st
 </figure>
 <br/>
 
-### 3.2. Indicators and Alerts
+### 3.2. Spinning Indicators and Alerts
 
-<p align="justify">Spinning indicators are used in order to inform the user that tweets are fetched from Twitter or during the authentication of the user. Alerts are used when a network connection should be established but the network is unavailable e.g. when tweets should be fetched from Twitter or the user has to be authenticated. The goal is that the user is always informed about what’s going on. In order to make the UI clear, the spinning indicator has a grey background when it appears in the center of the view.</p>
+<p align="justify">The goal of the spinning indicators and alerts is that the user is always informed about what’s going on.
+ 
+The indicators are used in order to inform the user that tweets are fetched from Twitter or during the authentication of the user. In order to make the UI clear, the indicator has a grey background when it appears in the center of the view (see graphic 4). If a list of searched tweets is refreshed during scrolling, an spinning indicator is showing at the end of the list (see graphic 5).
+ 
+Alerts are used when a network connection should be established but the network is unavailable e.g. when tweets should be fetched from Twitter or the user has to be authenticated (see graphic 6).</p>
 
 <br/>
 <br/>
 <figure>
   <p align="center">
      <img src="/TwitterDrop/ReadMeImages/SpinningIndicator.png" align="center" width="300">
-     <p align="center">Graphic 4: Spinning Indicator; Source: Own Illustration: Search for Tweets
+     <p align="center">Graphic 4: Large Spinning Indicator; Source: Own Illustration: Search for Tweets
+  </p>
+</figure>
+
+<br/>
+<br/>
+<figure>
+  <p align="center">
+     <img src="/TwitterDrop/ReadMeImages/SpinningIndicator_small.png" align="center" width="300">
+     <p align="center">Graphic 5: Small Spinning Indicator; Source: Own Illustration: Search for Tweets
   </p>
 </figure>
 
@@ -180,11 +193,12 @@ Because of the entities that a tweet can contain, the properties in the tweet st
 <figure>
   <p align="center">
      <img src="/TwitterDrop/ReadMeImages/NoNetwork.png" align="center" width="300">
-     <p align="center">Graphic 5: No Network Available; Source: Own Illustration: Search for Tweets
+     <p align="center">Graphic 6: No Network Available; Source: Own Illustration: Search for Tweets
   </p>
 </figure>
 <br/>
 
 **Code Links:**
   * [LoadingViewController.swift](TwitterDrop/Utility/View%20Helper/LoadingViewController.swift)
+  * [TweetSearch.swift](TwitterDrop/Scenes/TweetSearch/TweetSearchTableViewController.swift)
   * [UIViewController+Alert.swift](TwitterDrop/Extension/UIViewController+Alert.swift)
