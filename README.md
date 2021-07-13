@@ -166,7 +166,7 @@ Because of the entities that a tweet can contain, the properties in the tweet st
 
 <p align="justify">The goal of the spinning indicators and alerts is that the user is always informed about what’s going on.
  
-The indicators are used in order to inform the user that tweets are fetched from Twitter or during the authentication of the user. In order to make the UI clear, the indicator has a grey background when it appears in the center of the view (see graphic 4). If a list of searched tweets is refreshed during scrolling, an spinning indicator is showing at the end of the list (see graphic 5).
+Indicators are used in order to inform the user that tweets are fetched from Twitter or during the authentication of the user. In order to make the UI clear, the large indicator has a grey background when it appears in the center of the view (see graphic 4). If a list of searched tweets is refreshed during scrolling, a small spinning indicator is showing at the end of the list (see graphic 5).
  
 Alerts are used when a network connection should be established but the network is unavailable e.g. when tweets should be fetched from Twitter or the user has to be authenticated (see graphic 6).</p>
 
