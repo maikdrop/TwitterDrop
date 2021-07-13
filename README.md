@@ -175,7 +175,7 @@ Alerts are used when a network connection should be established but the network 
 <figure>
   <p align="center">
      <img src="/TwitterDrop/ReadMeImages/SpinningIndicator.png" align="center" width="300">
-     <p align="center">Graphic 4: Large Spinning Indicator; Source: Own Illustration: Search for Tweets
+     <p align="center">Graphic 4: Large Spinning Indicator; Source: Own Illustration of Search for Tweets
   </p>
 </figure>
 
@@ -184,7 +184,7 @@ Alerts are used when a network connection should be established but the network 
 <figure>
   <p align="center">
      <img src="/TwitterDrop/ReadMeImages/SpinningIndicator_small.png" align="center" width="300">
-     <p align="center">Graphic 5: Small Spinning Indicator; Source: Own Illustration: Search for Tweets
+     <p align="center">Graphic 5: Small Spinning Indicator; Source: Own Illustration of Search for Tweets
   </p>
 </figure>
 
@@ -193,7 +193,7 @@ Alerts are used when a network connection should be established but the network 
 <figure>
   <p align="center">
      <img src="/TwitterDrop/ReadMeImages/NoNetwork.png" align="center" width="300">
-     <p align="center">Graphic 6: No Network Available; Source: Own Illustration: Search for Tweets
+     <p align="center">Graphic 6: No Network Available; Source: Own Illustration of Search for Tweets
   </p>
 </figure>
 <br/>
