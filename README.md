@@ -157,7 +157,7 @@ Because of the entities that a tweet can contain, the properties in the tweet st
 <figure>
   <p align="center">
      <img src="/TwitterDrop/ReadMeImages/TweetCell.png" align="center" width="450">
-     <p align="center">Graphic 3: Tweet UI; Source: <a href="TwitterDrop/CustomCells/TweetTableViewCell.xib">TweetTableViewCell.xib in Xcode</a>
+     <p align="center">Graphic 3: Tweet UI; Source: <a href="TwitterDrop/CustomCells/TweetTableViewCell.xib">TweetTableViewCell.xib</a> in Xcode
   </p>
 </figure>
 <br/>
