@@ -85,24 +85,24 @@ class Network {
      - Parameter completion: Calls back with true if the url is accessible.
      */
     func ping(url: URL, completion: @escaping (Bool) -> Void) {
-        
+
         var request = URLRequest(url: url)
         request.httpMethod = "HEAD"
-        
+
         URLSession(configuration: .default).dataTask(with: request) { (_, response, error) in
-            
+
             guard error == nil else {
                 print(#function)
                 print("Error: \(error!.localizedDescription)")
                 completion(false)
                 return
             }
-        
+
             guard let httpResponse = response as? HTTPURLResponse else {
                 completion(false)
                 return
             }
-            
+
             if httpResponse.statusCode == StatusCode.accessForbidden || httpResponse.statusCode == StatusCode.fileNotFound {
               completion(false)
               return
