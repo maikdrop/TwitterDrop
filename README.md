@@ -39,7 +39,7 @@
 
 ### 1.2. What's the App about?
 
-<p align="justify">Users have to log in to their account in order to fetch data from Twitter. In the first view after login, the current tweets of the users timeline will be fetched automatically. The user credentials are saved in the Keychain. So, if the user launches the app again, a new login is not necessary. Of course, the user has the possibility to log out. In the timeline view the tweets can be refreshed via the “pull to refresh” gesture and they will be stored in a locale database. Next time these tweets will be fetched automatically from the database before fetching new tweets from Twitter. The user can search for tweets from Twitter via the magnifying glass button in the navigation bar. By typing a word in the search bar at the top, the user can search for tweets, which contains the searched term. The found tweets will be inserted in a descending order. If the user scrolls to the end of the list, older tweets will be fetched from Twitter immediately. In order to search for the tweeters, the user taps on the button with the title “Tweeters” in the navigation bar. This leads to a further view where all tweeters are sorted alphabetically. Each cell shows the tweeter and the count of tweets containing the search term. If the user taps on a cell, a new view with a list of these tweets shows up.</p>
+<p align="justify">Users have to log in to their account in order to fetch data from Twitter. In the first view after login, the current tweets of the users timeline will be fetched automatically. The user credentials are saved in the Keychain. So, if the user launches the app again, a new login is not necessary. Of course, the user has the possibility to log out. In the timeline view the tweets can be refreshed via the “pull to refresh” gesture and they will be stored in a local database. Next time these tweets will be fetched automatically from the database before fetching new tweets from Twitter. The user can search for tweets from Twitter via the magnifying glass button in the navigation bar. By typing a word in the search bar at the top, the user can search for tweets, which contains the searched term. The found tweets will be inserted in a descending order. If the user scrolls to the end of the list, older tweets will be fetched from Twitter immediately. In order to search for the tweeters, the user taps on the button with the title “Tweeters” in the navigation bar. This leads to a further view where all tweeters are sorted alphabetically. Each cell shows the tweeter and the count of tweets containing the search term. If the user taps on a cell, a new view with a list of these tweets shows up.</p>
 
 ### 1.3. Features
 
@@ -107,7 +107,19 @@ The big advantage of this approach is that the user saves on mobile data traffic
 <figure>
   <p align="center">
      <img src="/TwitterDrop/ReadMeImages/TweetFetchDatabaseDataFlow.png" align="center" width="500">
-     <p align="center">Graphic 2: Tweet Fetching from Local Database; Source: Own Illustration
+     <p align="center">Graphic 2: Fetching Tweets from local Database; Source: Own Illustration
+  </p>
+</figure>
+<br/>
+
+<p align="justify">In order to display only stored tweeters, a <a href="https://developer.apple.com/documentation/coredata/nsfetchedresultscontroller">NSFetchedResultsController</a> is used to manage the results of a Core Data fetch request. Graphic 3 illustrates the fetching of tweeters whose tweets contain the search term "#Swift".</p>
+
+<br/>
+<br/>
+<figure>
+  <p align="center">
+     <img src="/TwitterDrop/ReadMeImages/TweetersAlphabetical.png" align="center" width="300">
+     <p align="center">Graphic 3: Fetching Tweeters from local Database; Source: Own Illustration
   </p>
 </figure>
 <br/>
@@ -151,13 +163,13 @@ Because of the entities that a tweet can contain, the properties in the tweet st
 
 ### 3.1. Tweets
 
-<p align="justify">A List of Tweets is used in several views and contexts. There are different possibilities to make the list reusable. One possibility is to reuse a TableViewController with a custom  configured tweet cell. The problem is that the UI logic e.g. selecting a cell or swipe action will be reused as well. It makes more sense to make the tweet cell itself reusable. That can be done programmatically or using the interface builder (IB). The IB was chosen because the handling is easier to arrange and constraint parts of the UI e.g. labels and images. Graphic 3 shows the result of the IB in Xcode.</p>
+<p align="justify">A List of Tweets is used in several views and contexts. There are different possibilities to make the list reusable. One possibility is to reuse a TableViewController with a custom  configured tweet cell. The problem is that the UI logic e.g. selecting a cell or swipe action will be reused as well. It makes more sense to make the tweet cell itself reusable. That can be done programmatically or using the interface builder (IB). The IB was chosen because the handling is easier to arrange and constraint parts of the UI e.g. labels and images. Graphic 4 shows the result of the IB in Xcode.</p>
 
 <br/>
 <figure>
   <p align="center">
      <img src="/TwitterDrop/ReadMeImages/TweetCell.png" align="center" width="450">
-     <p align="center">Graphic 3: Tweet UI; Source: <a href="TwitterDrop/CustomCells/TweetTableViewCell.xib">TweetTableViewCell.xib</a> in Xcode
+     <p align="center">Graphic 4: Tweet UI; Source: <a href="TwitterDrop/CustomCells/TweetTableViewCell.xib">TweetTableViewCell.xib</a> in Xcode
   </p>
 </figure>
 <br/>
@@ -166,16 +178,16 @@ Because of the entities that a tweet can contain, the properties in the tweet st
 
 <p align="justify">The goal of the spinning indicators and alerts is that the user is always informed about what’s going on.
  
-Indicators are used in order to inform the user that tweets are fetched from Twitter or during the authentication of the user. In order to make the UI clear, the large indicator has a grey background when it appears in the center of the view (see graphic 4). If a list of searched tweets is refreshed during scrolling, a small spinning indicator is showing at the end of the list (see graphic 5).
+Indicators are used in order to inform the user that tweets are fetched from Twitter or during the authentication of the user. In order to make the UI clear, the large indicator has a grey background when it appears in the center of the view (see graphic 5). If a list of searched tweets is refreshed during scrolling, a small spinning indicator is showing at the end of the list (see graphic 6).
  
-Alerts are used when a network connection should be established but the network is unavailable e.g. when tweets should be fetched from Twitter or the user has to be authenticated (see graphic 6).</p>
+Alerts are used when a network connection should be established but the network is unavailable e.g. when tweets should be fetched from Twitter or the user has to be authenticated (see graphic 7).</p>
 
 <br/>
 <br/>
 <figure>
   <p align="center">
      <img src="/TwitterDrop/ReadMeImages/SpinningIndicator.png" align="center" width="300">
-     <p align="center">Graphic 4: Large Spinning Indicator; Source: Own Illustration of Search for Tweets
+     <p align="center">Graphic 5: Large Spinning Indicator; Source: Own Illustration of Search for Tweets
   </p>
 </figure>
 
@@ -184,7 +196,7 @@ Alerts are used when a network connection should be established but the network 
 <figure>
   <p align="center">
      <img src="/TwitterDrop/ReadMeImages/SpinningIndicator_small.png" align="center" width="300">
-     <p align="center">Graphic 5: Small Spinning Indicator; Source: Own Illustration of Search for Tweets
+     <p align="center">Graphic 6: Small Spinning Indicator; Source: Own Illustration of Search for Tweets
   </p>
 </figure>
 
@@ -193,7 +205,7 @@ Alerts are used when a network connection should be established but the network 
 <figure>
   <p align="center">
      <img src="/TwitterDrop/ReadMeImages/NoNetwork.png" align="center" width="300">
-     <p align="center">Graphic 6: No Network Available; Source: Own Illustration of Search for Tweets
+     <p align="center">Graphic 7: No Network Available; Source: Own Illustration of Search for Tweets
   </p>
 </figure>
 <br/>
