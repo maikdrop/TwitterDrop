@@ -112,7 +112,7 @@ The big advantage of this approach is that the user saves on mobile data traffic
 </figure>
 <br/>
 
-<p align="justify">In order to display only stored tweeters, a <a href="https://developer.apple.com/documentation/coredata/nsfetchedresultscontroller">NSFetchedResultsController</a> is used to manage the results of a Core Data fetch request. Graphic 3 illustrates the fetching of tweeters whose tweets contain the search term "#Swift".</p>
+<p align="justify">In order to display only stored tweeters, a <a href="https://developer.apple.com/documentation/coredata/nsfetchedresultscontroller">NSFetchedResultsController</a> is used to manage the results of a Core Data fetch request. Graphic 3 illustrates the fetching and displaying of tweeters in alphabetical order whose tweets contain the search term "#Swift".</p>
 
 <br/>
 <br/>
