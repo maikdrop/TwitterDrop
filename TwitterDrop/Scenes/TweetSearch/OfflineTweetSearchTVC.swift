@@ -81,7 +81,10 @@ class OfflineTweetSearchTVC: TweetSearchTableViewController {
                     
                     if !isAvailable {
                         
-                        self?.superGetProfileImage(for: Set([twitterUserInDB]))
+                        // - in order to get the current profile image URL, the whole twitter user has to be fetched from Twitter again
+                        // - this request doesnt't exist anymore in the standard Twitter API
+                            
+    //                        self?.superGetProfileImage(for: Set([fetchedTwitterUser]))
                     }
                 }
             }
