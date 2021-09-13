@@ -1,5 +1,3 @@
-# Overview -> in Progress...
-
 ## Author
 
 * **Maik Müller** *Applied Computer Science (M. Sc.)* - [LinkedIn](https://www.linkedin.com/in/maik-m-253357107), [Xing](https://www.xing.com/profile/Maik_Mueller215/cv)
